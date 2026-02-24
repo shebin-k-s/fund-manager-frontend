@@ -76,7 +76,7 @@ export default function UnlockPage() {
                             />
                             {error && (
                                 <p className="text-xs font-mono text-red-400 mt-2">
-                                    Error: {error}
+                                    {error}
                                 </p>
                             )}
                         </div>
