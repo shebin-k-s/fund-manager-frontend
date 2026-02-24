@@ -50,8 +50,9 @@ export default function DashboardPage() {
 
     sessionStorage.clear();
 
-    navigate('/unlock', { replace: true });
-
+    setTimeout(() => {
+      navigate('/unlock', { replace: true });
+    }, 500);
   };
 
   const hasError = fundsIsError || cardsIsError;
