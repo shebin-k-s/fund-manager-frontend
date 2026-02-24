@@ -73,7 +73,7 @@ export default function CreditCardDetailPage() {
         isLoading={isLoading}
       />
 
-      <div className="page-content space-y-6">
+      <div className="page-content space-y-6 overflow-hidden">
         {card && (
           <>
             <CardVisual card={card} index={1} />

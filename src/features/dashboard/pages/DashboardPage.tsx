@@ -1,6 +1,6 @@
 import { startOfDay } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
 import { useCardsQuery } from '@/features/credit-cards/hooks/useCreditCards';
 import { useFundsQuery } from '@/features/funds/hooks/useFunds';
 import { getNextUnpaidDate, getMissedCount } from '@/features/funds/utils/fundDateUtils';
@@ -14,10 +14,11 @@ import { UpcomingFunds } from '../components/UpcomingFunds';
 import type { CreditCard, BillingCycle } from '@/features/credit-cards/types';
 import { Fund } from '@/features/funds/types';
 import { DashboardErrorState } from '../components/DashboardErrorState';
-import apiClient from '@/lib/apiClient';
+import { useState } from 'react';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const {
     data: funds,
@@ -39,20 +40,23 @@ export default function DashboardPage() {
 
   // Logout function
   const handleLogout = async () => {
+    setIsLoggingOut(true);
 
+    // Clear all storage
     localStorage.clear();
+    sessionStorage.clear();
 
+    // Clear all cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c
         .replace(/^ +/, "")
         .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
 
-    sessionStorage.clear();
-
     setTimeout(() => {
       navigate('/unlock', { replace: true });
-    }, 1000);
+      setIsLoggingOut(false);
+    }, 1200); 
   };
 
   const hasError = fundsIsError || cardsIsError;
@@ -62,10 +66,22 @@ export default function DashboardPage() {
     if (cardsIsError) refetchCards();
   };
 
+  // Show loading overlay when logging out
+  if (isLoggingOut) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-gray-800 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 font-mono text-sm">logging out securely...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (hasError) {
     return (
       <div className="animate-fade-in">
-        <DashboardHeader onLogout={handleLogout} />
+        <DashboardHeader onLogout={handleLogout} isLoggingOut={isLoggingOut} />
         <div className="page-content">
           <DashboardErrorState
             error={fundsError || cardsError}
@@ -125,7 +141,7 @@ export default function DashboardPage() {
   if (isEmpty) {
     return (
       <div className="animate-fade-in">
-        <DashboardHeader onLogout={handleLogout} />
+        <DashboardHeader onLogout={handleLogout} isLoggingOut={isLoggingOut} />
         <DashboardEmptyState />
       </div>
     );
@@ -133,9 +149,9 @@ export default function DashboardPage() {
 
   return (
     <div className="animate-fade-in">
-      <DashboardHeader onLogout={handleLogout} />
+      <DashboardHeader onLogout={handleLogout} isLoggingOut={isLoggingOut} />
 
-      <div className="page-content">
+      <div className="page-content mt-4">
         <MissedPaymentsSection
           missedFunds={missedFunds}
           missedCards={missedCards}

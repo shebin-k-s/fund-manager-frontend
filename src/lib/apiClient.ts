@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
 
       try {
         const res = await axios.post(
-          "/api/refresh",
+          "/refresh",
           {},
           { withCredentials: true }
         );
@@ -43,11 +43,11 @@ apiClient.interceptors.response.use(
 
         return apiClient(originalRequest);
       } catch {
-        
+
         localStorage.removeItem("auth_token");
         setTimeout(() => {
           window.location.href = "/unlock";
-        }, 500);
+        }, 1200);
 
         return Promise.reject(error);
       }

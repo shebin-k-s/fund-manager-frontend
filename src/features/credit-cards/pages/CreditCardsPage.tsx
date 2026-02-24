@@ -118,7 +118,7 @@ export default function CreditCardsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="px-4 pb-6">
+      <div className="px-4 pb-6 mt-4">
         {isLoading ? (
           <CardListSkeleton />
         ) : cards.length === 0 ? (

@@ -1,12 +1,13 @@
 // features/dashboard/components/Header.tsx
-import { LogOut } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface DashboardHeaderProps {
     onLogout?: () => void;
+    isLoggingOut?: boolean;
 }
 
-export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
+export function DashboardHeader({ onLogout, isLoggingOut }: DashboardHeaderProps) {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const handleLogoutClick = () => {
@@ -20,18 +21,14 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
         setShowLogoutConfirm(false);
     };
 
-    const handleCancelLogout = () => {
-        setShowLogoutConfirm(false);
-    };
-
     return (
         <>
-            <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
+            <header className="sticky top-0 z-10 bg-[#0A0A0A]/95 backdrop-blur-sm border-b border-[#333]">
                 <div className="px-4 py-3 flex items-center justify-between max-w-lg mx-auto">
                     <div>
-                        <h1 className="text-xl font-bold">Dashboard</h1>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            Welcome back!
+                        <h1 className="text-xl font-mono text-white">Dashboard</h1>
+                        <p className="text-xs font-mono text-gray-500 mt-0.5">
+                            secure area
                         </p>
                     </div>
 
@@ -39,11 +36,15 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
                     {onLogout && (
                         <button
                             onClick={handleLogoutClick}
-                            className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-colors"
+                            disabled={isLoggingOut}
+                            className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Logout"
-                            title="Logout"
                         >
-                            <LogOut className="w-5 h-5" />
+                            {isLoggingOut ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <LogOut className="w-5 h-5" />
+                            )}
                         </button>
                     )}
                 </div>
@@ -51,24 +52,25 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
 
             {/* Logout Confirmation Modal */}
             {showLogoutConfirm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl shadow-xl max-w-sm w-full p-6 border border-border">
-                        <h3 className="text-lg font-semibold mb-2">Logout</h3>
-                        <p className="text-muted-foreground mb-6">
-                            Are you sure you want to logout? You'll need to enter your access key again to return.
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#111] border border-[#333] rounded-lg max-w-sm w-full p-6">
+                        <h3 className="text-lg font-mono text-white mb-2">Confirm Logout</h3>
+                        <p className="text-sm font-mono text-gray-400 mb-6">
+                            Are you sure you want to logout? You'll need to enter your access key again.
                         </p>
                         <div className="flex gap-3">
                             <button
-                                onClick={handleCancelLogout}
-                                className="flex-1 px-4 py-2.5 rounded-xl border border-border hover:bg-accent transition-colors"
+                                onClick={() => setShowLogoutConfirm(false)}
+                                className="flex-1 px-4 py-2.5 rounded-lg border border-[#333] text-gray-300 hover:bg-[#1A1A1A] transition-colors font-mono text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmLogout}
-                                className="flex-1 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                                disabled={isLoggingOut}
+                                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors font-mono text-sm disabled:opacity-50"
                             >
-                                Logout
+                                {isLoggingOut ? 'Logging out...' : 'Logout'}
                             </button>
                         </div>
                     </div>
