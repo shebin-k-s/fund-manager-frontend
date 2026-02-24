@@ -4,10 +4,9 @@ import { useState } from 'react';
 
 interface DashboardHeaderProps {
     onLogout?: () => void;
-    isLoggingOut?: boolean;
 }
 
-export function DashboardHeader({ onLogout, isLoggingOut }: DashboardHeaderProps) {
+export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const handleLogoutClick = () => {
@@ -36,15 +35,12 @@ export function DashboardHeader({ onLogout, isLoggingOut }: DashboardHeaderProps
                     {onLogout && (
                         <button
                             onClick={handleLogoutClick}
-                            disabled={isLoggingOut}
                             className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Logout"
                         >
-                            {isLoggingOut ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                                <LogOut className="w-5 h-5" />
-                            )}
+
+                            <LogOut className="w-5 h-5" />
+
                         </button>
                     )}
                 </div>
@@ -67,10 +63,9 @@ export function DashboardHeader({ onLogout, isLoggingOut }: DashboardHeaderProps
                             </button>
                             <button
                                 onClick={handleConfirmLogout}
-                                disabled={isLoggingOut}
                                 className="flex-1 px-4 py-2.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors font-mono text-sm disabled:opacity-50"
                             >
-                                {isLoggingOut ? 'Logging out...' : 'Logout'}
+                                Logout
                             </button>
                         </div>
                     </div>

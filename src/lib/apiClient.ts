@@ -22,7 +22,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (originalRequest.url?.includes('/unlock')) {
+    if (originalRequest.url?.includes('/unlock') || originalRequest.url?.includes('/refresh')) {
       return Promise.reject(error);
     }
 
@@ -30,7 +30,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const res = await axios.post(
+        const res = await apiClient.post(
           "/refresh",
           {},
           { withCredentials: true }
@@ -45,9 +45,7 @@ apiClient.interceptors.response.use(
       } catch {
 
         localStorage.removeItem("auth_token");
-        setTimeout(() => {
-          window.location.href = "/unlock";
-        }, 1200);
+        window.location.href = "/unlock";
 
         return Promise.reject(error);
       }

@@ -6,6 +6,7 @@ import { useCardById, useUpdateCard } from '../hooks/useCreditCards';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DatePicker } from '@/components/DatePicker';
 
 export default function EditCreditCardPage() {
   const { id } = useParams<{ id: string }>();
@@ -110,31 +111,11 @@ export default function EditCreditCardPage() {
             Billing Start Date
           </label>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={cn(
-                  'w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-left flex items-center gap-2',
-                  !billingStartDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                {billingStartDate
-                  ? format(billingStartDate, 'PPP')
-                  : 'Pick a date'}
-              </button>
-            </PopoverTrigger>
-
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={billingStartDate}
-                onSelect={setBillingStartDate}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            value={billingStartDate}
+            onChange={setBillingStartDate}
+            placeholder="Pick a date"
+          />
         </div>
 
         {/* Bill Date */}

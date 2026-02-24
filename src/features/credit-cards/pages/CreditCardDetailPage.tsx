@@ -38,9 +38,7 @@ export default function CreditCardDetailPage() {
     }
   };
 
-  const gradientIndex = card?.id
-    ? Math.abs(card.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % 4
-    : 0;
+
 
   const isPending = markPaid.isPending || removePayment.isPending || deleteCard.isPending;
 

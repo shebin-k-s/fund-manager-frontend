@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children }: { children: JSX.Element }) {
     const token = localStorage.getItem("auth_token");
 
     if (!token) {

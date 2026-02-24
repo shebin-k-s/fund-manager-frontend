@@ -7,6 +7,7 @@ import { DAY_NAMES } from '../utils/fundDateUtils';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DatePicker } from '@/components/DatePicker';
 
 export default function CreateFundPage() {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ export default function CreateFundPage() {
   const [dayOfMonth, setDayOfMonth] = useState('1');
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [startOpen, setStartOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
 
   const canSubmit = name.trim() && amount.trim() && startDate && !createFund.isPending;
 
@@ -34,8 +37,8 @@ export default function CreateFundPage() {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header flex items-center gap-3">
+    <div className="animate-fade-in mb-4">
+      <div className="page-header sticky top-0 z-20 bg-background flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center">
           <ArrowLeft className="w-4 h-4 text-secondary-foreground" />
         </button>
@@ -91,32 +94,20 @@ export default function CreateFundPage() {
 
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Start Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className={cn("w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-left flex items-center gap-2", !startDate && "text-muted-foreground")}>
-                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                {startDate ? format(startDate, 'PPP') : 'Pick a date'}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className="p-3 pointer-events-auto" />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            value={startDate}
+            onChange={setStartDate}
+            placeholder="Pick a date"
+          />
         </div>
 
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">End Date (Optional)</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className={cn("w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-left flex items-center gap-2", !endDate && "text-muted-foreground")}>
-                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                {endDate ? format(endDate, 'PPP') : 'No end date'}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus className="p-3 pointer-events-auto" />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            value={endDate}
+            onChange={setEndDate}
+            placeholder="No end date"
+          />
         </div>
 
         <button onClick={handleSubmit} disabled={!canSubmit}

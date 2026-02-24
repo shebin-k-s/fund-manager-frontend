@@ -7,6 +7,7 @@ import type {
   CreditCard,
 } from '../types';
 import { getErrorMessage } from '@/utils/getErrorMessage';
+import { toast } from 'sonner'; // or your toast library
 
 const CARDS_KEY = ['creditCards'] as const;
 
@@ -54,10 +55,14 @@ export function useCreateCard() {
 
       // Also set the individual card cache
       queryClient.setQueryData([...CARDS_KEY, data.id], data);
+
+      toast.success('Card created successfully');
     },
 
     onError: (error) => {
-      console.error('Create Card Error:', getErrorMessage(error));
+      const message = getErrorMessage(error);
+      console.error('Create Card Error:', message);
+      toast.error(message || 'Failed to create card');
     },
   });
 }
@@ -80,10 +85,14 @@ export function useUpdateCard() {
       queryClient.setQueryData<CreditCard[]>(CARDS_KEY, (old = []) => {
         return old.map(card => card.id === variables.id ? data : card);
       });
+
+      toast.success('Card updated successfully');
     },
 
     onError: (error) => {
-      console.error('Update Card Error:', getErrorMessage(error));
+      const message = getErrorMessage(error);
+      console.error('Update Card Error:', message);
+      toast.error(message || 'Failed to update card');
     },
   });
 }
@@ -106,10 +115,14 @@ export function useDeleteCard() {
       queryClient.setQueryData<CreditCard[]>(CARDS_KEY, (old = []) => {
         return old.filter(card => card.id !== cardId);
       });
+
+      toast.success('Card deleted successfully');
     },
 
     onError: (error) => {
-      console.error('Delete Card Error:', getErrorMessage(error));
+      const message = getErrorMessage(error);
+      console.error('Delete Card Error:', message);
+      toast.error(message || 'Failed to delete card');
     },
   });
 }
@@ -132,6 +145,7 @@ export function useMarkCardPaid() {
 
       if (!cardId) {
         console.error('No card ID found in response or variables');
+        toast.error('Payment recorded but failed to update cache');
         return;
       }
 
@@ -148,10 +162,14 @@ export function useMarkCardPaid() {
         queryKey: [...CARDS_KEY, cardId],
         refetchType: 'none' // Don't auto refetch, just mark as stale
       });
+
+      toast.success('Payment recorded successfully');
     },
 
     onError: (error) => {
-      console.error('Mark Card Paid Error:', getErrorMessage(error));
+      const message = getErrorMessage(error);
+      console.error('Mark Card Paid Error:', message);
+      toast.error(message || 'Failed to record payment');
     },
   });
 }
@@ -178,6 +196,7 @@ export function useRemoveCardPayment() {
 
       if (!cardId) {
         console.error('No card ID found in response or variables');
+        toast.error('Payment removed but failed to update cache');
         return;
       }
 
@@ -189,11 +208,13 @@ export function useRemoveCardPayment() {
         return old.map(card => card.id === cardId ? data : card);
       });
 
-     
+      toast.success('Payment removed successfully');
     },
 
     onError: (error) => {
-      console.error('Remove Card Payment Error:', getErrorMessage(error));
+      const message = getErrorMessage(error);
+      console.error('Remove Card Payment Error:', message);
+      toast.error(message || 'Failed to remove payment');
     },
   });
 }

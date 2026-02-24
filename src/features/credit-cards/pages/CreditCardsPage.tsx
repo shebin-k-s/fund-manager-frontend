@@ -165,31 +165,7 @@ export default function CreditCardsPage() {
         )}
       </div>
 
-      {/* Floating Action Buttons */}
-      {!isLoading && !isError && cards.length > 0 && (
-        <>
-          {/* Mobile FAB */}
-          <div className="fixed bottom-4 right-4 md:hidden">
-            <Link
-              to="/cards/new"
-              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors"
-              aria-label="Add new card"
-            >
-              <Plus className="w-6 h-6" />
-            </Link>
-          </div>
-
-          {/* Desktop FAB */}
-          <div className="hidden md:block fixed bottom-4 right-4">
-            <Link
-              to="/cards/new"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="w-4 h-4" /> Add New Card
-            </Link>
-          </div>
-        </>
-      )}
+    
     </div>
   );
 }

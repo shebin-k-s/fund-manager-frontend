@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 
 import UnlockPage from "./features/unlock/UnlockPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicRoute from "./routes/publicRoute";
 
 const queryClient = new QueryClient();
 
@@ -32,11 +33,9 @@ const App = () => (
           <Route
             path="/unlock"
             element={
-              localStorage.getItem("auth_token") ? (
-                <Navigate to="/" replace />
-              ) : (
+              <PublicRoute>
                 <UnlockPage />
-              )
+              </PublicRoute>
             }
           />
           <Route
