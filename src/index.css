@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 228 20% 6%;
+    --foreground: 220 15% 90%;
+    --card: 228 16% 10%;
+    --card-foreground: 220 15% 90%;
+    --popover: 228 16% 12%;
+    --popover-foreground: 220 15% 90%;
+    --primary: 158 64% 42%;
+    --primary-foreground: 228 20% 6%;
+    --secondary: 228 12% 16%;
+    --secondary-foreground: 220 12% 75%;
+    --muted: 228 10% 14%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 228 14% 20%;
+    --accent-foreground: 220 15% 85%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 228 10% 15%;
+    --input: 228 10% 15%;
+    --ring: 158 64% 42%;
+    --radius: 0.875rem;
+    --success: 158 64% 42%;
+    --success-foreground: 158 64% 95%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 10%;
+
+    --sidebar-background: 228 20% 8%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 158 64% 42%;
+    --sidebar-primary-foreground: 228 20% 6%;
+    --sidebar-accent: 228 14% 18%;
+    --sidebar-accent-foreground: 220 15% 85%;
+    --sidebar-border: 228 10% 15%;
+    --sidebar-ring: 158 64% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .cc-gradient-1 {
+    background: linear-gradient(135deg, hsl(220 70% 45%), hsl(260 65% 38%));
+  }
+  .cc-gradient-2 {
+    background: linear-gradient(135deg, hsl(158 55% 35%), hsl(185 55% 28%));
+  }
+  .cc-gradient-3 {
+    background: linear-gradient(135deg, hsl(25 80% 48%), hsl(5 70% 42%));
+  }
+  .cc-gradient-4 {
+    background: linear-gradient(135deg, hsl(330 65% 45%), hsl(350 60% 38%));
+  }
+  .stat-card {
+    @apply bg-card rounded-xl p-4 border border-border;
+  }
+  .page-header {
+    @apply px-5 pt-6 pb-4;
+  }
+  .page-content {
+    @apply px-5 space-y-4;
+  }
+  .touch-card {
+    @apply bg-card rounded-xl border border-border cursor-pointer active:scale-[0.98] transition-transform duration-150;
+  }
+}
