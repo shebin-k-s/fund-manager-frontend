@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
     setTimeout(() => {
       navigate('/unlock', { replace: true });
-    }, 500);
+    }, 1000);
   };
 
   const hasError = fundsIsError || cardsIsError;

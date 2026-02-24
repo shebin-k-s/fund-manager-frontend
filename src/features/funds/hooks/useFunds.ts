@@ -80,15 +80,16 @@ export function useUpdateFund() {
 /* ===========================
    DELETE FUND
 =========================== */
-
 export function useDeleteFund() {
   const qc = useQueryClient();
 
   return useMutation<void, Error, string>({
     mutationFn: fundsApi.delete,
 
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: FUNDS_KEY });
+    onSuccess: (_, fundId) => {
+      qc.setQueryData<Fund[]>(FUNDS_KEY, (old) =>
+        old?.filter((f) => f.id !== fundId) ?? []
+      );
     },
 
     onError: (error) => {
