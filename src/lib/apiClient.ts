@@ -43,8 +43,13 @@ apiClient.interceptors.response.use(
 
         return apiClient(originalRequest);
       } catch {
+        
         localStorage.removeItem("auth_token");
-        window.location.href = "/unlock";
+        setTimeout(() => {
+          window.location.href = "/unlock";
+        }, 500);
+
+        return Promise.reject(error);
       }
     }
 
