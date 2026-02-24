@@ -2,16 +2,21 @@
 import apiClient from "@/lib/apiClient";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { KeyRound, Loader2, Lock } from "lucide-react";
+import { Lock, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function UnlockPage() {
     const [key, setKey] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
-    const handleUnlock = async (e: React.FormEvent) => {
+    const handleUnlock = async (e: React.FormEvent | React.MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation();
+
+        if (isLoading) return;
+
         if (!key.trim()) {
             setError("Access key required");
             return;
@@ -21,14 +26,40 @@ export default function UnlockPage() {
         setError("");
 
         try {
+            console.log("Sending request...");
             const res = await apiClient.post("/unlock", { key });
-            localStorage.setItem("auth_token", res.data.accessToken);
-            navigate("/", { replace: true });
-        } catch (err) {
-            setError("Invalid access key");
-            setKey("");
+            console.log("Response:", res.data);
+
+            if (res.data.accessToken) {
+                localStorage.setItem("auth_token", res.data.accessToken);
+                // Small delay to ensure localStorage is set
+                setTimeout(() => {
+                    navigate("/", { replace: true });
+                }, 100);
+            }
+        } catch (err: any) {
+            console.log("Error:", err.response?.data || err.message);
+
+            // Handle error gracefully - no page refresh!
+            if (err.response?.data?.error) {
+                setError(err.response.data.error);
+            } else if (err.message) {
+                setError(err.message);
+            } else {
+                setError("Invalid access key");
+            }
         } finally {
             setIsLoading(false);
+        }
+
+        return false;
+    };
+
+    const handleButtonClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isLoading) {
+            handleUnlock(e);
         }
     };
 
@@ -57,32 +88,59 @@ export default function UnlockPage() {
                         <span className="text-xs font-mono text-gray-400 ml-auto">secure://auth</span>
                     </div>
 
-                    <form onSubmit={handleUnlock} className="space-y-4">
+                    {/* Using div instead of form for complete control */}
+                    <div className="space-y-4">
                         <div>
                             <label className="block text-xs font-mono text-gray-300 mb-2">
                                 $ ENTER ACCESS KEY
                             </label>
-                            <input
-                                type="password"
-                                value={key}
-                                onChange={(e) => {
-                                    setKey(e.target.value);
-                                    setError("");
-                                }}
-                                className="w-full bg-black border border-[#333] rounded px-3 py-3 text-white font-mono text-sm focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-600 transition-colors"
-                                placeholder="••••••••"
-                                autoFocus
-                                disabled={isLoading}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={key}
+                                    onChange={(e) => {
+                                        setKey(e.target.value);
+                                        setError("");
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !isLoading) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleUnlock(e);
+                                        }
+                                    }}
+                                    className="w-full bg-black border border-[#333] rounded px-3 py-3 text-white font-mono text-sm focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-600 transition-colors pr-10"
+                                    placeholder="••••••••"
+                                    autoFocus
+                                    disabled={isLoading}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setShowPassword(!showPassword);
+                                    }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="w-4 h-4" />
+                                    ) : (
+                                        <Eye className="w-4 h-4" />
+                                    )}
+                                </button>
+                            </div>
                             {error && (
-                                <p className="text-xs font-mono text-red-400 mt-2">
-                                    {error}
+                                <p className="text-xs font-mono text-red-400 mt-2 flex items-center gap-1">
+                                    <span>✗</span> {error}
                                 </p>
                             )}
                         </div>
 
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={handleButtonClick}
                             disabled={isLoading}
                             className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 rounded font-mono text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-[#444]"
                         >
@@ -95,7 +153,7 @@ export default function UnlockPage() {
                                 "> UNLOCK"
                             )}
                         </button>
-                    </form>
+                    </div>
 
                     <div className="mt-4 pt-3 border-t border-[#333]">
                         <p className="text-[10px] font-mono text-gray-300 text-center">
