@@ -64,22 +64,22 @@ function StatCard({ title, value, subtitle, icon: Icon, color, isLoading }: Stat
     const classes = colorClasses[color];
 
     return (
-        <div className="stat-card">
-            <div className={`w-8 h-8 rounded-lg ${classes.bg} flex items-center justify-center mb-2.5`}>
-                <Icon className={`w-4 h-4 ${classes.text}`} />
+        <div className="glass-card p-4 transition-all duration-300 hover:bg-white/10 group">
+            <div className={`w-10 h-10 rounded-xl ${classes.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                <Icon className={`w-5 h-5 ${classes.text}`} />
             </div>
-            <p className="text-xs text-muted-foreground">{title}</p>
+            <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">{title}</p>
             {isLoading ? (
                 <>
-                    <div className={`h-7 w-24 ${classes.pulse} rounded animate-pulse mt-0.5`} />
-                    <div className="h-3 w-20 bg-muted rounded animate-pulse mt-1" />
+                    <div className={`h-8 w-24 ${classes.pulse} rounded-lg animate-pulse mt-1`} />
+                    <div className="h-3 w-20 bg-muted/50 rounded animate-pulse mt-2" />
                 </>
             ) : (
                 <>
-                    <p className={`text-xl font-bold ${classes.text} mt-0.5`}>
+                    <p className={`text-xl font-bold ${classes.text} mt-1 tracking-tight`}>
                         ₹{value.toLocaleString('en-IN')}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground mt-1.5">{subtitle}</p>
                 </>
             )}
         </div>

@@ -73,16 +73,50 @@
     @apply bg-card rounded-xl p-4 border border-border;
   }
 
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl;
+  }
+
+  .glass-card-hover {
+    @apply hover:bg-white/10 transition-all duration-300;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+
   .page-header {
     @apply px-5 pt-6 pb-4;
   }
 
   .page-content {
-    @apply px-5 space-y-4;
+    @apply px-5 space-y-4 pb-20;
   }
 
   .touch-card {
-    @apply bg-card rounded-xl border border-border cursor-pointer active:scale-[0.98] transition-transform duration-150;
+    @apply bg-card/40 backdrop-blur-sm rounded-xl border border-white/5 cursor-pointer active:scale-[0.98] transition-all duration-200;
   }
 }
 

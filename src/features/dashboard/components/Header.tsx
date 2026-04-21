@@ -1,6 +1,8 @@
-// features/dashboard/components/Header.tsx
-import { LogOut, Loader2 } from 'lucide-react';
+import { LogOut, Loader2, Server, Activity, AlertCircle, Bell, BellOff } from 'lucide-react';
 import { useState } from 'react';
+import { useServerStatus, ServerStatus } from '@/hooks/useServerStatus';
+import { useNotifications } from '@/hooks/useNotifications';
+import { cn } from '@/lib/utils';
 
 interface DashboardHeaderProps {
     onLogout?: () => void;
@@ -8,6 +10,8 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const { serverStatus } = useServerStatus();
+    const { permission, requestPermission } = useNotifications();
 
     const handleLogoutClick = () => {
         setShowLogoutConfirm(true);
@@ -20,29 +24,63 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
         setShowLogoutConfirm(false);
     };
 
+    const statusConfig: Record<ServerStatus, { icon: any, color: string, label: string, animation: string }> = {
+        live: { icon: Activity, color: 'text-emerald-500', label: 'Server Live', animation: 'animate-pulse' },
+        waking: { icon: Loader2, color: 'text-amber-500', label: 'Waking up...', animation: 'animate-spin' },
+        error: { icon: AlertCircle, color: 'text-red-500', label: 'Server Error', animation: '' }
+    };
+
+    const { icon: StatusIcon, color, label, animation } = statusConfig[serverStatus];
+
     return (
         <>
-            <header className="sticky top-0 z-10 bg-[#0A0A0A]/95 backdrop-blur-sm border-b border-[#333]">
-                <div className="px-4 py-3 flex items-center justify-between max-w-lg mx-auto">
+            <header className="sticky top-0 z-10 bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#333]">
+                <div className="px-5 py-4 flex items-center justify-between max-w-lg mx-auto">
                     <div>
-                        <h1 className="text-xl font-mono text-white">Dashboard</h1>
-                        <p className="text-xs font-mono text-gray-500 mt-0.5">
-                            secure area
+                        <h1 className="text-xl font-bold tracking-tight text-white/95">Dashboard</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80 mt-0.5">
+                            Secure Session
                         </p>
                     </div>
 
-                    {/* Logout Button */}
-                    {onLogout && (
+                    <div className="flex items-center gap-3">
+                        {/* Server Status Indicator */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 group cursor-help transition-all hover:bg-white/10">
+                            <StatusIcon className={`w-3.5 h-3.5 ${color} ${animation}`} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 group-hover:text-gray-200 hide-on-narrow">
+                                {label}
+                            </span>
+                        </div>
+
+                        {/* Notification Toggle */}
                         <button
-                            onClick={handleLogoutClick}
-                            className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Logout"
+                            onClick={requestPermission}
+                            className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95",
+                                permission === 'granted' 
+                                    ? "bg-primary/10 text-primary border border-primary/20" 
+                                    : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
+                            )}
+                            aria-label="Toggle Notifications"
                         >
-
-                            <LogOut className="w-5 h-5" />
-
+                            {permission === 'granted' ? (
+                                <Bell className="w-5 h-5" />
+                            ) : (
+                                <BellOff className="w-5 h-5" />
+                            )}
                         </button>
-                    )}
+
+                        {/* Logout Button */}
+                        {onLogout && (
+                            <button
+                                onClick={handleLogoutClick}
+                                className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
+                                aria-label="Logout"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </header>
 

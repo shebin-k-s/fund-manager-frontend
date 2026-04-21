@@ -13,12 +13,15 @@ interface UpcomingCardsProps {
 
 export function UpcomingCards({ cards, today, isLoading }: UpcomingCardsProps) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold">Card Dues</h2>
+    <div className="glass-card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-4 bg-warning rounded-full" />
+          <h2 className="text-sm font-bold tracking-tight text-white/90">Card Dues</h2>
+        </div>
         {!isLoading && cards.length > 0 && (
-          <Link to="/cards" className="text-xs text-primary flex items-center gap-1 hover:underline">
-            View all <ArrowRight className="w-3 h-3" />
+          <Link to="/cards" className="text-[10px] uppercase font-bold tracking-wider text-warning hover:text-warning/80 transition-colors">
+            See All
           </Link>
         )}
       </div>
@@ -26,8 +29,8 @@ export function UpcomingCards({ cards, today, isLoading }: UpcomingCardsProps) {
       {isLoading ? (
         <UpcomingCardsSkeleton />
       ) : cards.length > 0 ? (
-        <div className="space-y-2.5">
-          {cards.slice(0, 3).map(({ card, cycle }) => (
+        <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+          {cards.map(({ card, cycle }) => (
             <UpcomingCardItem key={card.id} card={card} cycle={cycle} today={today} />
           ))}
         </div>

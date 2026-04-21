@@ -14,9 +14,12 @@ import { UpcomingFunds } from '../components/UpcomingFunds';
 import type { CreditCard, BillingCycle } from '@/features/credit-cards/types';
 import { Fund } from '@/features/funds/types';
 import { DashboardErrorState } from '../components/DashboardErrorState';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useEffect } from 'react';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { checkAndNotifyDues } = useNotifications();
 
   const {
     data: funds,
@@ -108,6 +111,20 @@ export default function DashboardPage() {
     })
     .filter((item): item is { card: CreditCard; cycle: BillingCycle } => item !== null)
     .sort((a, b) => a.cycle.dueDate.getTime() - b.cycle.dueDate.getTime());
+
+  // Check for notifications
+  useEffect(() => {
+    if (!fundsLoading && !cardsLoading) {
+      const allDues: Array<{ id: string, name: string, date: Date, type: 'card' | 'fund' }> = [
+        ...upcomingFunds.map(f => ({ id: f.fund.id, name: f.fund.name, date: f.date, type: 'fund' as const })),
+        ...upcomingCards.map(c => ({ id: c.card.id, name: c.card.name, date: c.cycle.dueDate, type: 'card' as const }))
+      ];
+      
+      if (allDues.length > 0) {
+        checkAndNotifyDues(allDues);
+      }
+    }
+  }, [fundsLoading, cardsLoading, upcomingFunds, upcomingCards, checkAndNotifyDues]);
 
   const isEmpty = !fundsLoading && !cardsLoading && safeFunds.length === 0 && safeCards.length === 0;
 

@@ -13,12 +13,15 @@ interface UpcomingFundsProps {
 
 export function UpcomingFunds({ funds, today, isLoading }: UpcomingFundsProps) {
     return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold">Upcoming Fund Payments</h2>
+        <div className="glass-card p-5">
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-4 bg-primary rounded-full" />
+                    <h2 className="text-sm font-bold tracking-tight text-white/90">Fund Payments</h2>
+                </div>
                 {!isLoading && funds.length > 0 && (
-                    <Link to="/funds" className="text-xs text-primary flex items-center gap-1 hover:underline">
-                        View all <ArrowRight className="w-3 h-3" />
+                    <Link to="/funds" className="text-[10px] uppercase font-bold tracking-wider text-primary hover:text-primary/80 transition-colors">
+                        See All
                     </Link>
                 )}
             </div>
@@ -26,8 +29,8 @@ export function UpcomingFunds({ funds, today, isLoading }: UpcomingFundsProps) {
             {isLoading ? (
                 <UpcomingFundsSkeleton />
             ) : funds.length > 0 ? (
-                <div className="space-y-2.5">
-                    {funds.slice(0, 3).map(({ fund, date }) => (
+                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+                    {funds.map(({ fund, date }) => (
                         <UpcomingFundItem key={fund.id} fund={fund} date={date} today={today} />
                     ))}
                 </div>

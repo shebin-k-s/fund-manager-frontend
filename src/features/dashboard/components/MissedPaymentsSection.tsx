@@ -23,8 +23,8 @@ export function MissedPaymentsSection({
     if (totalMissed === 0) return null;
 
     return (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
+        <div className="glass-card p-4 bg-destructive/5 border-destructive/20 shadow-destructive/10">
+            <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle className="w-5 h-5 text-destructive" />
                 <h2 className="text-sm font-bold text-destructive">
                     {totalMissed} Missed Payment{totalMissed > 1 ? 's' : ''}
