@@ -30,8 +30,8 @@ export default defineConfig(({ mode }) => ({
       },
       includeAssets: ['favicon.ico', 'logo.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'CashPilot Finance',
-        short_name: 'CashPilot',
+        name: 'Velo',
+        short_name: 'Velo',
         description: 'Manage Credit Cards & Recurring Deposits',
         theme_color: '#ffffff',
         display: 'standalone',

@@ -4,14 +4,14 @@ self.addEventListener('push', (event) => {
     data = event.data?.json();
   } catch (e) {
     data = {
-      title: 'New Notification',
+      title: 'Velo',
       body: event.data?.text() || '',
       url: '/'
     };
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Notification', {
+    self.registration.showNotification(data.title || 'Velo', {
       body: data.body || '',
       icon: '/logo.png',
       badge: '/logo.png',
