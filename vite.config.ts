@@ -19,8 +19,14 @@ export default defineConfig(({ mode }) => ({
     // 2. Add the PWA configuration
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'public',
+      filename: 'sw-custom.js',
       devOptions: {
         enabled: true
+      },
+      injectManifest: {
+        injectionPoint: undefined, // 👈 don't inject precache if not needed
       },
       includeAssets: ['favicon.ico', 'logo.png', 'apple-touch-icon.png'],
       manifest: {
