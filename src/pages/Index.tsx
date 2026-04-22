@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { format, isBefore, startOfDay } from 'date-fns';
-import { Plus, Wallet, CreditCard as CCIcon, ArrowRight, CalendarClock, AlertTriangle } from 'lucide-react';
+import { Plus, Wallet, CreditCard as CCIcon, ArrowRight, CalendarClock, AlertTriangle, BellRing } from 'lucide-react';
 import { useFinance } from '@/lib/FinanceContext';
 import { getNextUnpaidDate, getNextUnpaidCycle, getMissedCount, getMissedCardCount } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function Dashboard() {
   const { funds, cards } = useFinance();
+  const { triggerPush } = useNotifications();
   const today = startOfDay(new Date());
 
   const totalFundInvested = funds.reduce(
@@ -36,9 +38,18 @@ export default function Dashboard() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <p className="text-muted-foreground text-sm">Welcome back 👋</p>
-        <h1 className="text-2xl font-bold mt-1">Dashboard</h1>
+      <div className="flex items-start justify-between mb-2">
+        <div className="page-header mb-0">
+          <p className="text-muted-foreground text-sm">Welcome back 👋</p>
+          <h1 className="text-2xl font-bold mt-1">Dashboard</h1>
+        </div>
+        <button
+          onClick={triggerPush}
+          className="p-2.5 mt-2 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors inline-flex items-center gap-2"
+          title="Trigger Notifications Status"
+        >
+          <BellRing className="w-5 h-5" />
+        </button>
       </div>
 
       {isEmpty ? (

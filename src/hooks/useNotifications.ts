@@ -112,6 +112,17 @@ export function useNotifications() {
     }
   }, [permission]);
 
+  const triggerPush = useCallback(async () => {
+    try {
+      toast.info("Triggering push notifications...");
+      await apiClient.post('/notifications/trigger');
+      toast.success("Push notifications triggered successfully");
+    } catch (error: any) {
+      console.error("Error triggering push:", error);
+      toast.error(`Fail to trigger: ${error.message || 'Unknown error'}`);
+    }
+  }, []);
+
   useEffect(() => {
     if (permission === 'granted') {
       console.info("Permission is granted, triggering subscribeToPush...");
@@ -124,6 +135,7 @@ export function useNotifications() {
     requestPermission, 
     sendNotification,
     checkAndNotifyDues,
-    subscribeToPush
+    subscribeToPush,
+    triggerPush
   };
 }

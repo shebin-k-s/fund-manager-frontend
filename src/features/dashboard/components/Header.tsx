@@ -1,4 +1,13 @@
-import { LogOut, Loader2, Server, Activity, AlertCircle, Bell, BellOff } from 'lucide-react';
+import {
+    LogOut,
+    Loader2,
+    Activity,
+    AlertCircle,
+    Bell,
+    BellOff,
+    BellRing
+} from 'lucide-react';
+
 import { useState } from 'react';
 import { useServerStatus, ServerStatus } from '@/hooks/useServerStatus';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -10,100 +19,185 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
     const { serverStatus } = useServerStatus();
-    const { permission, requestPermission } = useNotifications();
+    const { permission, requestPermission, triggerPush } = useNotifications();
 
-    const handleLogoutClick = () => {
-        setShowLogoutConfirm(true);
-    };
+    const notificationsGranted = permission === 'granted';
 
-    const handleConfirmLogout = () => {
-        if (onLogout) {
-            onLogout();
+    const statusConfig: Record<
+        ServerStatus,
+        {
+            icon: React.ElementType;
+            color: string;
+            bg: string;
+            dot: string;
+            label: string;
+            animation: string;
         }
-        setShowLogoutConfirm(false);
+    > = {
+        live: {
+            icon: Activity,
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-500/10 border-emerald-500/20',
+            dot: 'bg-emerald-400',
+            label: 'Live',
+            animation: 'animate-pulse',
+        },
+        waking: {
+            icon: Loader2,
+            color: 'text-amber-400',
+            bg: 'bg-amber-500/10 border-amber-500/20',
+            dot: 'bg-amber-400',
+            label: 'Waking up',
+            animation: 'animate-spin',
+        },
+        error: {
+            icon: AlertCircle,
+            color: 'text-red-400',
+            bg: 'bg-red-500/10 border-red-500/20',
+            dot: 'bg-red-400',
+            label: 'Server error',
+            animation: '',
+        },
     };
 
-    const statusConfig: Record<ServerStatus, { icon: any, color: string, label: string, animation: string }> = {
-        live: { icon: Activity, color: 'text-emerald-500', label: 'Server Live', animation: 'animate-pulse' },
-        waking: { icon: Loader2, color: 'text-amber-500', label: 'Waking up...', animation: 'animate-spin' },
-        error: { icon: AlertCircle, color: 'text-red-500', label: 'Server Error', animation: '' }
-    };
+    const { icon: StatusIcon, color, bg, dot, label, animation } =
+        statusConfig[serverStatus];
 
-    const { icon: StatusIcon, color, label, animation } = statusConfig[serverStatus];
+    // 🔥 unified bell behavior
+    const handleBellClick = async () => {
+        if (permission === 'default') {
+            await requestPermission();
+            return;
+        }
+
+        if (permission === 'granted') {
+            triggerPush();
+            return;
+        }
+
+        // denied → do nothing (or show toast if you have one)
+    };
 
     return (
         <>
-            <header className="sticky top-0 z-10 bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#333]">
-                <div className="px-5 py-4 flex items-center justify-between max-w-lg mx-auto">
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-white/95">Dashboard</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80 mt-0.5">
+            <header className="sticky top-0 z-10 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.06]">
+
+                {/* Main row */}
+                <div className="px-4 pt-3 pb-2.5 flex items-center justify-between max-w-lg mx-auto gap-3">
+
+                    {/* Title */}
+                    <div className="min-w-0">
+                        <h1 className="text-base font-semibold tracking-tight text-white leading-none">
+                            Dashboard
+                        </h1>
+                        <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-500/60 mt-1">
                             Secure Session
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Server Status Indicator */}
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 group cursor-help transition-all hover:bg-white/10">
-                            <StatusIcon className={`w-3.5 h-3.5 ${color} ${animation}`} />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 group-hover:text-gray-200 hide-on-narrow">
-                                {label}
-                            </span>
+                    {/* Right controls */}
+                    <div className="flex items-center gap-2 shrink-0">
+
+                        {/* Server status */}
+                        <div
+                            className={cn(
+                                'flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider',
+                                bg,
+                                color
+                            )}
+                        >
+                            <span
+                                className={cn(
+                                    'w-1.5 h-1.5 rounded-full shrink-0',
+                                    dot,
+                                    serverStatus === 'live' && 'animate-pulse'
+                                )}
+                            />
+                            <StatusIcon
+                                className={cn('w-3 h-3 shrink-0', animation)}
+                            />
+                            <span>{label}</span>
                         </div>
 
-                        {/* Notification Toggle */}
+                        {/* 🔔 Bell (single unified control) */}
                         <button
-                            onClick={requestPermission}
+                            onClick={handleBellClick}
+                            title={
+                                permission === 'granted'
+                                    ? 'Send test notification'
+                                    : permission === 'denied'
+                                        ? 'Notifications blocked'
+                                        : 'Enable notifications'
+                            }
+                            aria-label="Notifications"
                             className={cn(
-                                "w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95",
-                                permission === 'granted' 
-                                    ? "bg-primary/10 text-primary border border-primary/20" 
-                                    : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
+                                'w-9 h-9 rounded-xl flex items-center justify-center border transition-all active:scale-95',
+                                notificationsGranted
+                                    ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
+                                    : 'bg-white/[0.04] border-white/[0.08] text-gray-500 hover:text-gray-300 hover:bg-white/[0.08]'
                             )}
-                            aria-label="Toggle Notifications"
                         >
                             {permission === 'granted' ? (
-                                <Bell className="w-5 h-5" />
+                                <BellRing className="w-4 h-4" />
+                            ) : permission === 'denied' ? (
+                                <BellOff className="w-4 h-4" />
                             ) : (
-                                <BellOff className="w-5 h-5" />
+                                <Bell className="w-4 h-4" />
                             )}
                         </button>
 
-                        {/* Logout Button */}
+                        {/* Logout */}
                         {onLogout && (
                             <button
-                                onClick={handleLogoutClick}
-                                className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
+                                onClick={() => setShowLogoutConfirm(true)}
                                 aria-label="Logout"
+                                className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all active:scale-95"
                             >
-                                <LogOut className="w-5 h-5" />
+                                <LogOut className="w-4 h-4" />
                             </button>
                         )}
                     </div>
                 </div>
             </header>
 
-            {/* Logout Confirmation Modal */}
+            {/* Logout Modal */}
             {showLogoutConfirm && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#111] border border-[#333] rounded-lg max-w-sm w-full p-6">
-                        <h3 className="text-lg font-mono text-white mb-2">Confirm Logout</h3>
-                        <p className="text-sm font-mono text-gray-400 mb-6">
-                            Are you sure you want to logout? You'll need to enter your access key again.
+                <div
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
+                    onClick={() => setShowLogoutConfirm(false)}
+                >
+                    <div
+                        className="bg-[#111] border border-white/[0.08] rounded-2xl w-full max-w-sm p-6 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+                            <LogOut className="w-4 h-4 text-red-400" />
+                        </div>
+
+                        <h3 className="text-[15px] font-semibold text-white mb-1">
+                            Sign out?
+                        </h3>
+                        <p className="text-[13px] text-gray-500 mb-6 leading-relaxed">
+                            You'll need your access key to sign back in.
                         </p>
-                        <div className="flex gap-3">
+
+                        <div className="flex gap-2">
                             <button
                                 onClick={() => setShowLogoutConfirm(false)}
-                                className="flex-1 px-4 py-2.5 rounded-lg border border-[#333] text-gray-300 hover:bg-[#1A1A1A] transition-colors font-mono text-sm"
+                                className="flex-1 h-10 rounded-xl border border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.06] transition-all text-sm font-medium"
                             >
                                 Cancel
                             </button>
                             <button
-                                onClick={handleConfirmLogout}
-                                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors font-mono text-sm disabled:opacity-50"
+                                onClick={() => {
+                                    onLogout?.();
+                                    setShowLogoutConfirm(false);
+                                }}
+                                className="flex-1 h-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-sm font-medium"
                             >
-                                Logout
+                                Sign out
                             </button>
                         </div>
                     </div>
