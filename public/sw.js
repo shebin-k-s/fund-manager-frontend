@@ -16,6 +16,9 @@ self.addEventListener('push', (event) => {
       icon: '/logo.png',
       badge: '/logo.png',
       vibrate: [200, 100, 200],
+      tag: 'velo-notification',
+      renotify: true,
+      requireInteraction: true,
       data: { url: data.url || '/' },
     })
   );
