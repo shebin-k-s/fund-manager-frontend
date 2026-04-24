@@ -25,47 +25,50 @@ export function useNotifications() {
 
   // Listen for push messages from service worker (for mobile foreground notifications)
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
+    console.log('🔧 Setting up service worker message listener...');
+    
+    if (!('serviceWorker' in navigator)) {
+      console.warn('⚠️ Service Worker not supported');
+      return;
+    }
 
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       const { type, title, body, url } = event.data;
+      console.log('📨 Message received from service worker:', { type, title, body });
       
       if (type === 'PUSH_NOTIFICATION') {
-        console.log('📲 Received push message in foreground:', { title, body });
+        console.log('🎯 Processing PUSH_NOTIFICATION');
         
-        // Show visual toast alert on mobile when app is in foreground
+        // Play sound for urgency
+        const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
+        audio.play().catch(() => {});
+        
+        // Show aggressive toast alert
         toast.custom((t) => (
-          <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-lg border-l-4 border-blue-500">
-            <div className="font-bold text-lg mb-2">{title}</div>
-            <div className="text-sm text-gray-700 whitespace-pre-wrap">{body}</div>
+          <div className="fixed top-4 left-4 right-4 z-[9999] w-auto bg-red-500 text-white p-6 rounded-lg shadow-2xl border-2 border-red-700 animate-bounce">
+            <div className="font-bold text-xl mb-3">🔔 {title}</div>
+            <div className="text-base whitespace-pre-wrap">{body}</div>
           </div>
         ));
         
-        // Also try to show a standard notification if possible
-        if (permission === 'granted') {
-          setTimeout(() => {
-            navigator.serviceWorker.ready.then(reg => {
-              reg.showNotification(title, {
-                body: body,
-                icon: '/logo.png',
-                badge: '/logo.png',
-                tag: 'foreground-' + Date.now(),
-                vibrate: [300, 200, 300],
-                requireInteraction: true,
-                renotify: true,
-              });
-            });
-          }, 100);
-        }
+        // Also show browser alert for absolute visibility on mobile
+        setTimeout(() => {
+          console.log('💬 Showing browser alert');
+          alert(`${title}\n\n${body}`);
+        }, 200);
       }
     };
 
+    console.log('📌 Adding message event listener to service worker controller...');
     navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
     
+    console.log('✅ Message listener registered');
+    
     return () => {
+      console.log('🧹 Removing message listener');
       navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
     };
-  }, [permission]);
+  }, []);
 
   const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
     if (permission !== 'granted') return;
