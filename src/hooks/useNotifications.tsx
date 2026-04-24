@@ -23,51 +23,9 @@ export function useNotifications() {
     }
   }, []);
 
-  // Listen for push messages from service worker (for mobile foreground notifications)
+  // Don't show in-app notifications - let system handle all notifications
   useEffect(() => {
-    console.log('🔧 Setting up service worker message listener...');
-    
-    if (!('serviceWorker' in navigator)) {
-      console.warn('⚠️ Service Worker not supported');
-      return;
-    }
-
-    const handleServiceWorkerMessage = (event: MessageEvent) => {
-      const { type, title, body, url } = event.data;
-      console.log('📨 Message received from service worker:', { type, title, body });
-      
-      if (type === 'PUSH_NOTIFICATION') {
-        console.log('🎯 Processing PUSH_NOTIFICATION');
-        
-        // Play sound for urgency
-        const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
-        audio.play().catch(() => {});
-        
-        // Show aggressive toast alert
-        toast.custom((t) => (
-          <div className="fixed top-4 left-4 right-4 z-[9999] w-auto bg-red-500 text-white p-6 rounded-lg shadow-2xl border-2 border-red-700 animate-bounce">
-            <div className="font-bold text-xl mb-3">🔔 {title}</div>
-            <div className="text-base whitespace-pre-wrap">{body}</div>
-          </div>
-        ));
-        
-        // Also show browser alert for absolute visibility on mobile
-        setTimeout(() => {
-          console.log('💬 Showing browser alert');
-          alert(`${title}\n\n${body}`);
-        }, 200);
-      }
-    };
-
-    console.log('📌 Adding message event listener to service worker controller...');
-    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
-    
-    console.log('✅ Message listener registered');
-    
-    return () => {
-      console.log('🧹 Removing message listener');
-      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
-    };
+    console.log('✅ Notifications will show as system notifications only');
   }, []);
 
   const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
