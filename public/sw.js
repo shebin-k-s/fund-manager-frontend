@@ -5,42 +5,25 @@ self.addEventListener('push', (event) => {
   } catch (e) {
     data = {
       title: 'Velo',
-      body: event.data?.text() || 'New notification',
+      body: event.data?.text() || '',
       url: '/'
     };
   }
 
   event.waitUntil(
     self.registration.showNotification(data.title || 'Velo', {
-      body: data.body || 'You have a new notification',
+      body: data.body || '',
       icon: '/logo.png',
       badge: '/logo.png',
-      vibrate: [500, 300, 500],
-      renotify: true,
+      vibrate: [200, 100, 200],
       data: { url: data.url || '/' },
     })
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
-  console.log('📌 Notification clicked');
   event.notification.close();
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((windowClients) => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
-        if (client.url === '/' && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(event.notification.data?.url || '/');
-      }
-    })
+    clients.openWindow(event.notification.data?.url || '/')
   );
-});
-
-// Handle notification close
-self.addEventListener('notificationclose', (event) => {
-  console.log('❌ Notification closed');
 });
