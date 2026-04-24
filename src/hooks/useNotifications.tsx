@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 
@@ -22,6 +22,50 @@ export function useNotifications() {
       console.error("Error requesting notification permission:", error);
     }
   }, []);
+
+  // Listen for push messages from service worker (for mobile foreground notifications)
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      const { type, title, body, url } = event.data;
+      
+      if (type === 'PUSH_NOTIFICATION') {
+        console.log('📲 Received push message in foreground:', { title, body });
+        
+        // Show visual toast alert on mobile when app is in foreground
+        toast.custom((t) => (
+          <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-lg border-l-4 border-blue-500">
+            <div className="font-bold text-lg mb-2">{title}</div>
+            <div className="text-sm text-gray-700 whitespace-pre-wrap">{body}</div>
+          </div>
+        ));
+        
+        // Also try to show a standard notification if possible
+        if (permission === 'granted') {
+          setTimeout(() => {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification(title, {
+                body: body,
+                icon: '/logo.png',
+                badge: '/logo.png',
+                tag: 'foreground-' + Date.now(),
+                vibrate: [300, 200, 300],
+                requireInteraction: true,
+                renotify: true,
+              });
+            });
+          }, 100);
+        }
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+    };
+  }, [permission]);
 
   const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
     if (permission !== 'granted') return;
