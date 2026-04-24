@@ -15,10 +15,8 @@ self.addEventListener('push', (event) => {
       body: data.body || 'You have a new notification',
       icon: '/logo.png',
       badge: '/logo.png',
-      tag: 'velo-notification',
-      vibrate: [300, 200, 300],
+      vibrate: [500, 300, 500],
       renotify: true,
-      requireInteraction: true,
       data: { url: data.url || '/' },
     })
   );
