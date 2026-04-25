@@ -110,7 +110,6 @@ export function useNotifications() {
       const response = await apiClient.post('/notifications/subscribe', subscription);
       console.info("Backend response:", response.data);
       console.log("Push subscription successful! 🎉");
-      toast.success("Push notifications registered!");
     } catch (error: any) {
       console.error("Error subscribing to push:", error);
       toast.error(`Push Error: ${error.message || 'Unknown error'}`);
