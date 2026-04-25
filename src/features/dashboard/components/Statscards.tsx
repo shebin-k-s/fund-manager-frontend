@@ -1,4 +1,5 @@
-import { Wallet, CreditCard as CCIcon } from 'lucide-react';
+import { Wallet, CreditCard as CCIcon, Landmark } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StatsCardsProps {
     fundsStats: {
@@ -22,8 +23,8 @@ export function StatsCards({ fundsStats, cardsStats, isLoading }: StatsCardsProp
                 title="Fund Invested"
                 value={fundsStats.totalInvested}
                 subtitle={`${fundsStats.count} active fund${fundsStats.count !== 1 ? 's' : ''}`}
-                icon={Wallet}
-                color="primary"
+                icon={Landmark}
+                color="navy"
                 isLoading={isLoading?.funds}
             />
             <StatCard
@@ -31,7 +32,7 @@ export function StatsCards({ fundsStats, cardsStats, isLoading }: StatsCardsProp
                 value={cardsStats.totalPaid}
                 subtitle={`${cardsStats.count} card${cardsStats.count !== 1 ? 's' : ''}`}
                 icon={CCIcon}
-                color="warning"
+                color="forest"
                 isLoading={isLoading?.cards}
             />
         </div>
@@ -43,45 +44,45 @@ interface StatCardProps {
     value: number;
     subtitle: string;
     icon: React.ElementType;
-    color: 'primary' | 'warning';
+    color: 'navy' | 'forest';
     isLoading?: boolean;
 }
 
 function StatCard({ title, value, subtitle, icon: Icon, color, isLoading }: StatCardProps) {
     const colorClasses = {
-        primary: {
-            bg: 'bg-primary/15',
-            text: 'text-primary',
-            pulse: 'bg-primary/10'
+        navy: {
+            bg: 'bg-blue-900/40 border-blue-800/50',
+            text: 'text-blue-200/90',
         },
-        warning: {
-            bg: 'bg-warning/15',
-            text: 'text-warning',
-            pulse: 'bg-warning/10'
+        forest: {
+            bg: 'bg-emerald-900/40 border-emerald-800/50',
+            text: 'text-emerald-200/90',
         }
     };
 
-    const classes = colorClasses[color];
+    const classes = colorClasses[color] || { bg: 'bg-white/5 border-white/10', text: 'text-white/80' };
 
     return (
-        <div className="glass-card p-4 transition-all duration-300 hover:bg-white/10 group">
-            <div className={`w-10 h-10 rounded-xl ${classes.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                <Icon className={`w-5 h-5 ${classes.text}`} />
+        <div className="glass-card glass-card-hover p-4 group relative overflow-hidden flex flex-col justify-between">
+            <div className="relative z-10 flex flex-col gap-2">
+                <div className={cn("w-11 h-11 rounded-xl border flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300 shadow-sm relative overflow-hidden", classes.bg)}>
+                    <Icon className={cn("w-5 h-5 z-10", classes.text)} />
+                </div>
+                <p className="text-[10px] uppercase font-bold tracking-[0.1em] text-muted-foreground/70">{title}</p>
+                {isLoading ? (
+                    <>
+                        <div className="h-7 w-24 bg-white/5 rounded-lg animate-pulse mt-1" />
+                        <div className="h-3 w-20 bg-white/5 rounded animate-pulse mt-2" />
+                    </>
+                ) : (
+                    <>
+                        <p className="text-[20px] font-extrabold text-white/95 mt-1 tracking-tight drop-shadow-sm">
+                            ₹{value.toLocaleString('en-IN')}
+                        </p>
+                        <p className="text-[11px] font-medium text-muted-foreground/80 mt-0.5">{subtitle}</p>
+                    </>
+                )}
             </div>
-            <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">{title}</p>
-            {isLoading ? (
-                <>
-                    <div className={`h-8 w-24 ${classes.pulse} rounded-lg animate-pulse mt-1`} />
-                    <div className="h-3 w-20 bg-muted/50 rounded animate-pulse mt-2" />
-                </>
-            ) : (
-                <>
-                    <p className={`text-xl font-bold ${classes.text} mt-1 tracking-tight`}>
-                        ₹{value.toLocaleString('en-IN')}
-                    </p>
-                    <p className="text-[11px] font-medium text-muted-foreground mt-1.5">{subtitle}</p>
-                </>
-            )}
         </div>
     );
 }

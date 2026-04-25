@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { format, isBefore } from 'date-fns';
-import { ArrowRight } from 'lucide-react';
+import { Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Fund } from '@/types/finance';
 import { EmptyState } from './EmptyState';
@@ -14,13 +14,13 @@ interface UpcomingFundsProps {
 export function UpcomingFunds({ funds, today, isLoading }: UpcomingFundsProps) {
     return (
         <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-4 bg-primary rounded-full" />
-                    <h2 className="text-sm font-bold tracking-tight text-white/90">Fund Payments</h2>
+            <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-4 bg-blue-700/80 rounded-full" />
+                    <h2 className="text-[15px] font-bold tracking-tight text-white/95">Fund Payments</h2>
                 </div>
                 {!isLoading && funds.length > 0 && (
-                    <Link to="/funds" className="text-[10px] uppercase font-bold tracking-wider text-primary hover:text-primary/80 transition-colors">
+                    <Link to="/funds" className="text-[10px] uppercase font-bold tracking-wider text-blue-300/60 hover:text-blue-300 transition-colors">
                         See All
                     </Link>
                 )}
@@ -53,20 +53,20 @@ function UpcomingFundItem({ fund, date, today }: UpcomingFundItemProps) {
     return (
         <Link
             to={`/funds/${fund.id}`}
-            className="touch-card p-3.5 flex items-center gap-3 hover:bg-accent/50 transition-colors"
+            className="touch-card p-3.5 flex items-center gap-3.5 group"
         >
-            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center text-base">
-                💰
+            <div className="w-11 h-11 rounded-xl bg-blue-900/40 border border-blue-800/50 flex items-center justify-center text-blue-200/90 group-hover:scale-110 shadow-sm transition-transform duration-300">
+                <Landmark className="w-5 h-5 drop-shadow-sm" />
             </div>
             <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{fund.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="font-semibold text-[14px] text-white/90 truncate transition-colors group-hover:text-white">{fund.name}</p>
+                <p className="text-[12px] font-medium text-muted-foreground/80">
                     ₹{fund.amount.toLocaleString('en-IN')}
                 </p>
             </div>
             <div className={cn(
-                'text-xs font-medium px-2.5 py-1 rounded-lg',
-                overdue ? 'bg-destructive/15 text-destructive' : 'bg-warning/15 text-warning'
+                'text-[10px] uppercase font-bold tracking-wider px-2.5 py-1.5 rounded-[0.5rem] whitespace-nowrap',
+                overdue ? 'bg-destructive/10 text-destructive' : 'bg-blue-900/30 text-blue-300/80'
             )}>
                 {overdue ? 'Overdue' : format(date, 'MMM d')}
             </div>
@@ -76,15 +76,15 @@ function UpcomingFundItem({ fund, date, today }: UpcomingFundItemProps) {
 
 function UpcomingFundsSkeleton() {
     return (
-        <div className="space-y-2.5">
-            {[1, 2, 3].map(i => (
-                <div key={i} className="touch-card p-3.5 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 animate-pulse" />
+        <div className="space-y-3">
+            {[1, 2].map(i => (
+                <div key={i} className="touch-card p-3.5 flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-white/10 animate-pulse" />
                     <div className="flex-1 min-w-0">
-                        <div className="h-4 w-32 bg-muted rounded animate-pulse mb-1" />
-                        <div className="h-3 w-20 bg-muted rounded animate-pulse" />
+                        <div className="h-4 w-32 bg-white/5 rounded animate-pulse mb-1.5" />
+                        <div className="h-2.5 w-20 bg-white/5 rounded animate-pulse" />
                     </div>
-                    <div className="h-6 w-16 bg-muted rounded animate-pulse" />
+                    <div className="h-6 w-16 bg-white/5 rounded animate-pulse" />
                 </div>
             ))}
         </div>

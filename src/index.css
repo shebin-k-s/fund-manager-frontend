@@ -1,42 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 228 20% 6%;
-    --foreground: 220 15% 90%;
-    --card: 228 16% 10%;
-    --card-foreground: 220 15% 90%;
-    --popover: 228 16% 12%;
-    --popover-foreground: 220 15% 90%;
-    --primary: 158 64% 42%;
-    --primary-foreground: 228 20% 6%;
-    --secondary: 228 12% 16%;
-    --secondary-foreground: 220 12% 75%;
-    --muted: 228 10% 14%;
-    --muted-foreground: 220 10% 50%;
-    --accent: 228 14% 20%;
-    --accent-foreground: 220 15% 85%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 228 10% 15%;
-    --input: 228 10% 15%;
-    --ring: 158 64% 42%;
-    --radius: 0.875rem;
-    --success: 158 64% 42%;
-    --success-foreground: 158 64% 95%;
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 8%;
+    --popover-foreground: 0 0% 98%;
+    
+    /* Elegant Primary: Deep Purple / Indigo */
+    --primary: 262 80% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 6% 15%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 6% 15%;
+    --muted-foreground: 240 5% 65%;
+    
+    --accent: 262 80% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 6% 15%;
+    --input: 240 6% 15%;
+    --ring: 262 80% 50%;
+    --radius: 1rem;
+    
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    
     --warning: 38 92% 50%;
     --warning-foreground: 38 92% 10%;
 
-    --sidebar-background: 228 20% 8%;
-    --sidebar-foreground: 220 15% 85%;
-    --sidebar-primary: 158 64% 42%;
-    --sidebar-primary-foreground: 228 20% 6%;
-    --sidebar-accent: 228 14% 18%;
-    --sidebar-accent-foreground: 220 15% 85%;
-    --sidebar-border: 228 10% 15%;
-    --sidebar-ring: 158 64% 42%;
+    --sidebar-background: 240 10% 4%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 262 80% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 6% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 6% 15%;
+    --sidebar-ring: 262 80% 50%;
   }
 }
 
@@ -47,38 +59,42 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 }
 
 @layer utilities {
   .cc-gradient-1 {
-    background: linear-gradient(135deg, hsl(220 70% 45%), hsl(260 65% 38%));
+    /* Deep Jet Blue */
+    background: linear-gradient(135deg, #1e3a8a, #172554);
   }
 
   .cc-gradient-2 {
-    background: linear-gradient(135deg, hsl(158 55% 35%), hsl(185 55% 28%));
+    /* Deep Royal Purple */
+    background: linear-gradient(135deg, #581c87, #3b0764);
   }
 
   .cc-gradient-3 {
-    background: linear-gradient(135deg, hsl(25 80% 48%), hsl(5 70% 42%));
+    /* Deep Pine */
+    background: linear-gradient(135deg, #064e3b, #022c22);
   }
 
   .cc-gradient-4 {
-    background: linear-gradient(135deg, hsl(330 65% 45%), hsl(350 60% 38%));
+    /* Deep Auburn */
+    background: linear-gradient(135deg, #7c2d12, #431407);
   }
 
   .stat-card {
-    @apply bg-card rounded-xl p-4 border border-border;
+    @apply bg-card/80 backdrop-blur-xl rounded-2xl p-5 border border-white/5 shadow-md transition-all duration-300;
   }
 
   .glass-card {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl;
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-3xl shadow-md;
   }
 
   .glass-card-hover {
-    @apply hover:bg-white/10 transition-all duration-300;
+    @apply hover:bg-white/[0.06] hover:border-white/10 transition-all duration-300 hover:shadow-lg;
   }
 
   .scrollbar-hide {
@@ -91,8 +107,8 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -100,36 +116,53 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full;
+    @apply bg-white/10 rounded-full transition-colors;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/40;
+    @apply bg-white/20;
   }
 
   .page-header {
-    @apply px-5 pt-6 pb-4;
+    @apply px-6 pt-5 pb-5;
   }
 
   .page-content {
-    @apply px-5 space-y-4 pb-20;
+    /* Large padding to prevent overlap with bottom navigation */
+    @apply px-5 space-y-5 pb-24;
   }
 
   .touch-card {
-    @apply bg-card/40 backdrop-blur-sm rounded-xl border border-white/5 cursor-pointer active:scale-[0.98] transition-all duration-200;
+    @apply bg-card/60 backdrop-blur-md rounded-2xl border border-white/[0.05] cursor-pointer active:scale-[0.98] hover:bg-card/80 transition-all duration-200;
   }
 }
-
 
 html,
 body {
   height: 100%;
   overflow: hidden;
-  /* prevent body scroll */
 }
 
 #root {
   min-height: 100%;
   overflow-y: auto;
-  /* only this scrolls */
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in-up 0.5s ease-out forwards;
 }

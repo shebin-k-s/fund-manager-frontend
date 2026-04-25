@@ -14,34 +14,41 @@ export default function Layout() {
     path === '/' ? pathname === '/' : pathname.startsWith(path);
 
   return (
-    <div className="h-screen bg-background max-w-lg mx-auto relative flex flex-col">
-      {/* Main Content - Takes remaining height after accounting for bottom nav */}
-      <div
-        className="flex-1 overflow-y-auto mb-16 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <Outlet />
-      </div>
-
-      {/* Bottom Navigation - Fixed height */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border h-16">
-        <div className="flex justify-around items-center h-full max-w-lg mx-auto">
-          {tabs.map(tab => (
-            <Link
-              key={tab.path}
-              to={tab.path}
-              className={cn(
-                'flex flex-col items-center justify-center gap-1 px-4 py-1 text-[11px] font-medium transition-colors rounded-lg flex-1 h-full',
-                isActive(tab.path)
-                  ? 'text-primary bg-primary/5'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-              )}
-            >
-              <tab.icon className="w-5 h-5" />
-              <span>{tab.label}</span>
-            </Link>
-          ))}
+    <div className="min-h-screen w-full bg-background flex justify-center">
+      <div className="w-full h-screen max-w-md relative flex flex-col bg-background/50 sm:border-x sm:border-white/5">
+        
+        {/* Main Content */}
+        {/* Prevent bottom overlap with a large bottom padding (pb-[80px]) on the scrolling element instead of mb */}
+        <div className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1">
+          <Outlet />
         </div>
-      </nav>
+
+        {/* Bottom Navigation */}
+        <div className="absolute bottom-0 w-full max-w-md z-50">
+          <nav className="bg-card/95 backdrop-blur-xl border-t border-border flex justify-between items-center px-4 pb-safe pt-2 h-[72px]">
+            {tabs.map(tab => {
+              const active = isActive(tab.path);
+              return (
+                <Link
+                  key={tab.path}
+                  to={tab.path}
+                  className={cn(
+                    'flex flex-col items-center justify-center gap-1.5 py-2 px-2 flex-1 rounded-xl transition-colors',
+                    active
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-white/90'
+                  )}
+                >
+                  <tab.icon className={cn("w-6 h-6 z-10 transition-transform duration-300", active ? "scale-110 drop-shadow-sm" : "")} />
+                  <span className={cn("text-[10px] z-10", active ? "opacity-100 font-semibold" : "font-medium opacity-80")}>
+                    {tab.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
     </div>
   );
 }

@@ -82,17 +82,19 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
 
     return (
         <>
-            <header className="sticky top-0 z-10 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.06]">
+            {/* The header is sticky. We increase opacity to /95 and use backdrop-blur-2xl to prevent content from making the text hard to read on scroll */}
+            <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-2xl border-b border-white/10 shadow-sm">
 
                 {/* Main row */}
-                <div className="px-4 pt-3 pb-2.5 flex items-center justify-between max-w-lg mx-auto gap-3">
+                <div className="px-5 pt-5 pb-4 flex items-center justify-between max-w-lg mx-auto gap-3">
 
                     {/* Title */}
                     <div className="min-w-0">
-                        <h1 className="text-base font-semibold tracking-tight text-white leading-none">
+                        <h1 className="text-2xl font-black tracking-tight text-white leading-none">
                             Dashboard
                         </h1>
-                        <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-500/60 mt-1">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                             Secure Session
                         </p>
                     </div>
