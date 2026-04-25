@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useServerStatus, ServerStatus } from '@/hooks/useServerStatus';
 import { useNotifications } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
@@ -183,7 +184,7 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
             </header>
 
             {/* Logout Modal */}
-            {showLogoutConfirm && (
+            {showLogoutConfirm && createPortal(
                 <div
                     className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
                     onClick={() => setShowLogoutConfirm(false)}
@@ -221,7 +222,8 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );
