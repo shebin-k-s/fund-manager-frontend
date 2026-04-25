@@ -8,9 +8,12 @@ export function dateKey(d: Date): string {
 export function getFundPaymentDates(fund: Fund, rangeEnd?: Date): Date[] {
   const dates: Date[] = [];
   const start = startOfDay(new Date(fund.startDate));
-  const end = fund.endDate
-    ? startOfDay(new Date(fund.endDate))
-    : rangeEnd || addMonths(new Date(), 3);
+  const fundEnd = fund.endDate ? startOfDay(new Date(fund.endDate)) : undefined;
+  
+  // Cap generation at rangeEnd, but never exceed the fund's actual endDate
+  const end = rangeEnd 
+    ? (fundEnd && isBefore(fundEnd, rangeEnd) ? fundEnd : rangeEnd)
+    : (fundEnd || addMonths(new Date(), 3));
 
   if (fund.recurrence === 'weekly' && fund.dayOfWeek !== undefined) {
     let cur = new Date(start);

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, Pencil, FileText } from 'lucide-react';
+import { exportStatementToPdf } from '@/features/statements/utils/exportToPdf';
 
 interface FundHeaderProps {
     name: string;
@@ -39,6 +40,15 @@ export function FundHeader({ name, recurrenceLabel, amount, fundId, isLoading }:
                     {recurrenceLabel} · ₹{amount.toLocaleString('en-IN')}
                 </p>
             </div>
+            
+            <button
+                onClick={() => exportStatementToPdf('fund-statement-container', `${name}_Statement`)}
+                className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+                title="Download Statement"
+            >
+                <FileText className="w-4 h-4 text-emerald-400" />
+            </button>
+
             <Link
                 to={`/funds/${fundId}/edit`}
                 className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"

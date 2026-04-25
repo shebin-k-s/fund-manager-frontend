@@ -4,6 +4,7 @@ import { CardHeader } from '../components/CrediCardDetail/CardHeader';
 import { CardVisual } from '../components/CrediCardDetail/CardVisual';
 import { CardPaymentStatus } from '../components/CrediCardDetail/BillingSummary';
 import { DeleteSection } from '../components/CrediCardDetail/DeleteSection';
+import { CardStatementDocument } from '@/features/statements/components/CardStatementDocument';
 
 export default function CreditCardDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -84,6 +85,8 @@ export default function CreditCardDetailPage() {
             />
 
             <DeleteSection onDelete={handleDelete} isPending={deleteCard.isPending} />
+            
+            <CardStatementDocument card={card} />
           </>
         )}
       </div>

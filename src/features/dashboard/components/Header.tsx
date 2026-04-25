@@ -5,13 +5,15 @@ import {
     AlertCircle,
     Bell,
     BellOff,
-    BellRing
+    BellRing,
+    FileText
 } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useServerStatus, ServerStatus } from '@/hooks/useServerStatus';
 import { useNotifications } from '@/hooks/useNotifications';
+import { exportStatementToPdf } from '@/features/statements/utils/exportToPdf';
 import { cn } from '@/lib/utils';
 
 interface DashboardHeaderProps {

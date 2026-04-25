@@ -14,6 +14,8 @@ import CreditCardsPage from "@/features/credit-cards/pages/CreditCardsPage";
 import AddCreditCardPage from "@/features/credit-cards/pages/AddCreditCardPage";
 import EditCreditCardPage from "@/features/credit-cards/pages/EditCreditCardPage";
 import CreditCardDetailPage from "@/features/credit-cards/pages/CreditCardDetailPage";
+import CalendarPage from "@/features/calendar/pages/CalendarPage";
+import StatementsPage from "@/features/statements/pages/StatementsPage";
 import NotFound from "./pages/NotFound";
 
 import UnlockPage from "./features/unlock/UnlockPage";
@@ -55,6 +57,8 @@ const App = () => (
             <Route path="cards/new" element={<AddCreditCardPage />} />
             <Route path="cards/:id" element={<CreditCardDetailPage />} />
             <Route path="cards/:id/edit" element={<EditCreditCardPage />} />
+            <Route path="calendar" element={<CalendarPage />} />
+            <Route path="statements" element={<StatementsPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

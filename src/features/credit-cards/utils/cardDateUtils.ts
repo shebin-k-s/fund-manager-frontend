@@ -45,7 +45,7 @@ function validateDate(day: number, year: number, month: number): number {
  * Only includes cycles where bill date has occurred or is current month
  */
 // In cardDateUtils.ts - Update getBillingCycles function
-export function getBillingCycles(card: CreditCard): BillingCycle[] {
+export function getBillingCycles(card: CreditCard, rangeEnd?: Date): BillingCycle[] {
   const startFrom = card.billingStartDate
     ? startOfDay(new Date(card.billingStartDate))
     : startOfDay(new Date(card.createdAt));
@@ -55,8 +55,8 @@ export function getBillingCycles(card: CreditCard): BillingCycle[] {
 
   let currentDate = startFrom;
 
-  // Only generate cycles up to current month
-  const endDate = now;
+  // Only generate cycles up to current month or provided rangeEnd
+  const endDate = rangeEnd || now;
 
   // Generate cycles until we reach current month
   while (isBefore(currentDate, endDate) || isSameMonth(currentDate, endDate)) {

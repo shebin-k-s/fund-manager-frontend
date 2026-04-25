@@ -1,11 +1,13 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Wallet, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Wallet, CreditCard, CalendarDays, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
   { path: '/', icon: LayoutDashboard, label: 'Home' },
   { path: '/funds', icon: Wallet, label: 'Funds' },
   { path: '/cards', icon: CreditCard, label: 'Cards' },
+  { path: '/calendar', icon: CalendarDays, label: 'Calendar' },
+  { path: '/statements', icon: FileText, label: 'Statements' },
 ];
 
 export default function Layout() {

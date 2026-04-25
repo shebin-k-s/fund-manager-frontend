@@ -9,6 +9,7 @@ import { MissedAlert } from '../components/fundDetail/MissedAlert';
 import { MonthNavigation } from '../components/fundDetail/MonthNavigation';
 import { PaymentList } from '../components/fundDetail/PaymentList';
 import { FundStatsCards } from '../components/fundDetail/statsCards';
+import { FundStatementDocument } from '@/features/statements/components/FundStatementDocument';
 import type { Fund } from '../types';
 
 export default function FundDetailPage() {
@@ -138,6 +139,8 @@ export default function FundDetailPage() {
         />
 
         <DeleteSection onDelete={handleDelete} isPending={deleteFund.isPending} />
+        
+        <FundStatementDocument fund={fund} />
       </div>
     </div>
   );

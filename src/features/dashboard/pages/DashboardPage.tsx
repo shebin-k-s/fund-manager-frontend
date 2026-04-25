@@ -8,6 +8,7 @@ import { getNextUnpaidCycle, getMissedCardCount } from '@/features/credit-cards/
 import { DashboardEmptyState } from '../components/EmptyState';
 import { DashboardHeader } from '../components/Header';
 import { MissedPaymentsSection } from '../components/MissedPaymentsSection';
+import { StatementDocument } from '@/features/statements/components/StatementDocument';
 import { StatsCards } from '../components/Statscards';
 import { UpcomingCards } from '../components/UpcomingCard';
 import { UpcomingFunds } from '../components/UpcomingFunds';
