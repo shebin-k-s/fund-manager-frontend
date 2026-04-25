@@ -58,22 +58,34 @@ export default function CalendarPage() {
         const k = props.date ? dateKey(props.date) : '';
         const markers = dueMap[k];
         
+        if (!markers || markers.length === 0) {
+            return (
+                <div className="flex items-center justify-center w-full h-full text-white/80">
+                    {props.date.getDate()}
+                </div>
+            );
+        }
+
+        const allPaid = markers.every(m => m.isPaid);
+        const hasPendingFund = markers.some(m => !m.isPaid && m.type === 'fund');
+        const hasPendingCard = markers.some(m => !m.isPaid && m.type === 'card');
+
         return (
-            <div className="flex flex-col items-center justify-center w-full h-full relative">
-                <span>{props.date.getDate()}</span>
-                {markers && markers.length > 0 && (
-                    <div className="flex gap-[3px] absolute bottom-1">
-                        {markers.map((m, i) => (
-                            <span 
-                                key={`${m.id}-${i}`} 
-                                className={cn(
-                                    "w-1.5 h-1.5 rounded-full border border-[rgba(0,0,0,0.2)]",
-                                    m.type === 'fund' 
-                                        ? (m.isPaid ? 'bg-blue-900/50' : 'bg-blue-400')
-                                        : (m.isPaid ? 'bg-purple-900/50' : 'bg-purple-400')
-                                )} 
-                            />
-                        ))}
+            <div className="flex flex-col items-center justify-center w-full h-full relative group">
+                <span className={cn("font-bold z-10", allPaid ? "text-emerald-400" : "text-white")}>
+                    {props.date.getDate()}
+                </span>
+                
+                {/* Visual Backdrop for entirely Paid days */}
+                {allPaid && (
+                    <div className="absolute inset-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 pointer-events-none" />
+                )}
+
+                {/* Glowing Dot markings purely for Pending items */}
+                {!allPaid && (
+                    <div className="flex gap-1 absolute bottom-1 z-10">
+                        {hasPendingFund && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]" title="Pending Fund" />}
+                        {hasPendingCard && <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.8)]" title="Pending Card" />}
                     </div>
                 )}
             </div>
@@ -120,28 +132,37 @@ export default function CalendarPage() {
                             <p className="text-sm text-gray-500">No payments scheduled on this date.</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                             {dayData.map((data, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
-                                    <div className="flex items-center gap-3">
+                                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.03] shadow-md">
+                                    <div className="flex items-center gap-3.5">
                                         <div className={cn(
-                                            "w-2.5 h-2.5 rounded-full shrink-0",
-                                            data.type === 'fund' 
-                                                ? (data.isPaid ? 'bg-blue-900' : 'bg-blue-400')
-                                                : (data.isPaid ? 'bg-purple-900' : 'bg-purple-400')
+                                            "w-3 h-3 rounded-full shrink-0 flex items-center justify-center",
+                                            data.isPaid ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                            data.type === 'fund' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]'
                                         )} />
                                         <div>
-                                            <p className="text-sm font-medium text-white">{data.name}</p>
-                                            <p className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">
+                                            <p className="text-sm font-semibold text-white tracking-wide">{data.name}</p>
+                                            <p className={cn("text-[10px] uppercase tracking-widest font-bold mt-1", data.isPaid ? "text-emerald-400" : "text-gray-500")}>
                                                 {data.type} • {data.isPaid ? 'PAID' : 'PENDING'}
                                             </p>
                                         </div>
                                     </div>
-                                    {data.type === 'fund' && (
-                                        <span className="text-sm font-mono text-gray-400">
-                                            ₹{data.amount?.toLocaleString('en-IN') || 0}
-                                        </span>
-                                    )}
+                                    
+                                    <div className="text-right flex flex-col items-end">
+                                        {data.isPaid ? (
+                                            <>
+                                                <span className="text-[10px] text-emerald-500/80 font-bold uppercase tracking-widest mb-0.5">Paid Details</span>
+                                                <span className="text-sm font-mono font-bold text-emerald-400">
+                                                    ₹{data.amount?.toLocaleString('en-IN') || 0}
+                                                </span>
+                                            </>
+                                        ) : data.type === 'fund' ? (
+                                            <span className="text-sm font-mono font-semibold text-gray-300">
+                                                ₹{data.amount?.toLocaleString('en-IN') || 0}
+                                            </span>
+                                        ) : null}
+                                    </div>
                                 </div>
                             ))}
                         </div>

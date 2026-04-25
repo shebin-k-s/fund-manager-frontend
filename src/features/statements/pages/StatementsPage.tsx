@@ -70,7 +70,7 @@ export default function StatementsPage() {
                 const isPaid = isDatePaid(fund, date);
                 rows.push({
                     id: `fund-${fund.id}-${date.getTime()}`, type: 'fund', name: fund.name, dueDate: date, isPaid,
-                    amount: isPaid ? (getPaidAmount(fund, date) || fund.amount) : fund.amount
+                    amount: isPaid ? Number(getPaidAmount(fund, date) || fund.amount) : Number(fund.amount)
                 });
             });
         };
@@ -87,7 +87,7 @@ export default function StatementsPage() {
 
                 rows.push({
                     id: `card-${card.id}-${c.cycle}`, type: 'card', name: card.name, dueDate: c.dueDate, isPaid: c.isPaid,
-                    amount: c.isPaid ? (c.paidAmount !== undefined ? c.paidAmount : 0) : (c.paidAmount || 0),
+                    amount: c.isPaid ? Number(c.paidAmount !== undefined ? c.paidAmount : 0) : Number(c.paidAmount || 0),
                     dateLabel
                 });
             });
@@ -111,9 +111,10 @@ export default function StatementsPage() {
         let paid = 0, pending = 0, overdue = 0;
         const now = new Date();
         finalRows.forEach(r => {
-            if (r.isPaid) { paid += r.amount; }
-            else if (r.dueDate < now) { overdue += r.amount; }
-            else { pending += r.amount; }
+            const amt = Number(r.amount) || 0;
+            if (r.isPaid) { paid += amt; }
+            else if (r.dueDate < now) { overdue += amt; }
+            else { pending += amt; }
         });
         return { paid, pending, overdue };
     }, [finalRows]);
@@ -316,11 +317,21 @@ export default function StatementsPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-mono font-bold text-white">
-                                            ₹{row.amount.toLocaleString('en-IN')}
-                                        </p>
-                                        <p className={cn("text-[9px] font-bold uppercase tracking-widest mt-1", 
+                                    <div className="text-right text-white">
+                                        {row.isPaid ? (
+                                            <span className="text-sm font-mono font-bold text-white">
+                                                ₹{Number(row.amount).toLocaleString('en-IN')}
+                                            </span>
+                                        ) : row.type === 'card' ? (
+                                            <span className="text-sm font-mono font-semibold text-gray-500">
+                                                TBA
+                                            </span>
+                                        ) : (
+                                            <span className="text-sm font-mono font-bold text-white">
+                                                ₹{Number(row.amount).toLocaleString('en-IN')}
+                                            </span>
+                                        )}
+                                        <p className={cn("text-[9px] font-bold uppercase tracking-widest mt-1 text-right", 
                                             row.isPaid ? "text-emerald-500" : row.dueDate < new Date() ? "text-red-500" : "text-blue-500"
                                         )}>
                                             {row.isPaid ? 'PAID' : row.dueDate < new Date() ? 'OVERDUE' : 'PENDING'}
