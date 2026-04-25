@@ -8,7 +8,7 @@ import {
     BellRing
 } from 'lucide-react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useServerStatus, ServerStatus } from '@/hooks/useServerStatus';
 import { useNotifications } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,23 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+    useEffect(() => {
+        const scrollContainer = document.getElementById('main-scroll-container');
+        if (showLogoutConfirm) {
+            // Lock internal scroll container and prevent viewport moving on mobile
+            if (scrollContainer) scrollContainer.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+        } else {
+            if (scrollContainer) scrollContainer.style.overflow = '';
+            document.body.style.touchAction = '';
+        }
+        return () => {
+            const container = document.getElementById('main-scroll-container');
+            if (container) container.style.overflow = '';
+            document.body.style.touchAction = '';
+        };
+    }, [showLogoutConfirm]);
 
     const { serverStatus } = useServerStatus();
     const { permission, requestPermission, triggerPush } = useNotifications();
@@ -105,10 +122,11 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
                         {/* Server status */}
                         <div
                             className={cn(
-                                'flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider',
+                                'flex items-center gap-1.5 p-1.5 sm:pl-2 sm:pr-3 sm:py-1.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider',
                                 bg,
                                 color
                             )}
+                            title={label}
                         >
                             <span
                                 className={cn(
@@ -120,7 +138,7 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
                             <StatusIcon
                                 className={cn('w-3 h-3 shrink-0', animation)}
                             />
-                            <span>{label}</span>
+                            <span className="hidden sm:inline">{label}</span>
                         </div>
 
                         {/* 🔔 Bell (single unified control) */}
@@ -167,11 +185,11 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
             {/* Logout Modal */}
             {showLogoutConfirm && (
                 <div
-                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
                     onClick={() => setShowLogoutConfirm(false)}
                 >
                     <div
-                        className="bg-[#111] border border-white/[0.08] rounded-2xl w-full max-w-sm p-6 shadow-2xl"
+                        className="bg-[#111] border border-white/[0.08] rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in duration-200"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">

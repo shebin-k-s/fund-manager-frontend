@@ -19,7 +19,7 @@ export default function Layout() {
         
         {/* Main Content */}
         {/* Prevent bottom overlap with a large bottom padding (pb-[80px]) on the scrolling element instead of mb */}
-        <div className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1">
+        <div id="main-scroll-container" className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1">
           <Outlet />
         </div>
 
