@@ -10,8 +10,7 @@ import { DashboardHeader } from '../components/Header';
 import { MissedPaymentsSection } from '../components/MissedPaymentsSection';
 import { StatementDocument } from '@/features/statements/components/StatementDocument';
 import { StatsCards } from '../components/Statscards';
-import { UpcomingCards } from '../components/UpcomingCard';
-import { UpcomingFunds } from '../components/UpcomingFunds';
+import { UpcomingDues } from '../components/UpcomingDues';
 import type { CreditCard, BillingCycle } from '@/features/credit-cards/types';
 import { Fund } from '@/features/funds/types';
 import { DashboardErrorState } from '../components/DashboardErrorState';
@@ -165,16 +164,11 @@ export default function DashboardPage() {
           }}
         />
 
-        <UpcomingFunds
+        <UpcomingDues
           funds={upcomingFunds}
-          today={today}
-          isLoading={fundsLoading}
-        />
-
-        <UpcomingCards
           cards={upcomingCards}
           today={today}
-          isLoading={cardsLoading}
+          isLoading={fundsLoading || cardsLoading}
         />
       </div>
     </div>

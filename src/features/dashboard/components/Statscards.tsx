@@ -20,17 +20,17 @@ export function StatsCards({ fundsStats, cardsStats, isLoading }: StatsCardsProp
     return (
         <div className="grid grid-cols-2 gap-3">
             <StatCard
-                title="Fund Invested"
+                title="Fund Payments"
                 value={fundsStats.totalInvested}
-                subtitle={`${fundsStats.count} active fund${fundsStats.count !== 1 ? 's' : ''}`}
+                subtitle={`Total across ${fundsStats.count} fund${fundsStats.count !== 1 ? 's' : ''}`}
                 icon={Landmark}
                 color="navy"
                 isLoading={isLoading?.funds}
             />
             <StatCard
-                title="Cards Paid"
+                title="Card Bill Paid"
                 value={cardsStats.totalPaid}
-                subtitle={`${cardsStats.count} card${cardsStats.count !== 1 ? 's' : ''}`}
+                subtitle={`Total across ${cardsStats.count} card${cardsStats.count !== 1 ? 's' : ''}`}
                 icon={CCIcon}
                 color="forest"
                 isLoading={isLoading?.cards}

@@ -9,7 +9,6 @@ import { StatementRow } from '../types';
 import { addMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, format } from 'date-fns';
 import { FileText, Filter, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Clock, LayoutList, CalendarDays, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function StatementsPage() {
     const { data: funds = [] } = useFundsQuery();
@@ -128,8 +127,10 @@ export default function StatementsPage() {
     };
 
     return (
-        <div className="animate-fade-in bg-background min-h-[calc(100vh-72px)] flex flex-col">
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-white/5 pb-4 px-4 pt-6">
+        <div className="animate-fade-in bg-background flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 80px)' }}>
+
+            {/* ── Header: filters — never scrolls ── */}
+            <div className="shrink-0 z-10 bg-background/95 backdrop-blur-xl border-b border-white/5 pb-4 px-4 pt-6">
                 <div className="max-w-lg mx-auto flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
@@ -276,32 +277,35 @@ export default function StatementsPage() {
                 </div>
             </div>
 
-            <ScrollArea className="flex-1 w-full max-w-lg mx-auto px-4 py-4">
-                <div className="space-y-4">
-                    {/* Live Metric Cards */}
-                    <div className="grid grid-cols-3 gap-2">
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1">Total Paid</p>
-                            <p className="text-sm font-mono font-bold text-emerald-500">₹{metrics.paid.toLocaleString('en-IN')}</p>
-                        </div>
-                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                            <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-1">Pending</p>
-                            <p className="text-sm font-mono font-bold text-blue-500">₹{metrics.pending.toLocaleString('en-IN')}</p>
-                        </div>
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                            <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider mb-1">Overdue</p>
-                            <p className="text-sm font-mono font-bold text-red-500">₹{metrics.overdue.toLocaleString('en-IN')}</p>
-                        </div>
-                    </div>
+            {/* ── Body: metrics (pinned) + list (scrollable) ── */}
+            <div className="flex-1 min-h-0 flex flex-col w-full max-w-lg mx-auto px-4 pt-4 overflow-hidden">
 
-                    {finalRows.length === 0 ? (
-                        <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center mt-4">
-                            <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
-                            <p className="text-sm font-medium text-gray-300">No records found</p>
-                            <p className="text-xs text-gray-500 mt-1">Adjust filters to see history.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2 mt-2">
+                {/* Summary metrics — always visible */}
+                <div className="shrink-0 grid grid-cols-3 gap-2 pb-3">
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1">Total Paid</p>
+                        <p className="text-sm font-mono font-bold text-emerald-500">₹{metrics.paid.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-1">Pending</p>
+                        <p className="text-sm font-mono font-bold text-blue-500">₹{metrics.pending.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                        <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider mb-1">Overdue</p>
+                        <p className="text-sm font-mono font-bold text-red-500">₹{metrics.overdue.toLocaleString('en-IN')}</p>
+                    </div>
+                </div>
+
+                {/* List — only this area scrolls, only when items overflow */}
+                {finalRows.length === 0 ? (
+                    <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+                        <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
+                        <p className="text-sm font-medium text-gray-300">No records found</p>
+                        <p className="text-xs text-gray-500 mt-1">Adjust filters to see history.</p>
+                    </div>
+                ) : (
+                    <div className="flex-1 min-h-0 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="space-y-2 pb-4">
                             {finalRows.map(row => (
                                 <div key={row.id} className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a]">
                                     <div className="flex items-start gap-3">
@@ -340,9 +344,9 @@ export default function StatementsPage() {
                                 </div>
                             ))}
                         </div>
-                    )}
-                </div>
-            </ScrollArea>
+                    </div>
+                )}
+            </div>
 
             <DynamicStatementDocument 
                 rows={finalRows} 

@@ -3,14 +3,55 @@ import { useCardsQuery } from '@/features/credit-cards/hooks/useCreditCards';
 import { getFundPaymentDates, dateKey, isDatePaid } from '@/features/funds/utils/fundDateUtils';
 import { getBillingCycles } from '@/features/credit-cards/utils/cardDateUtils';
 import { Calendar } from '@/components/ui/calendar';
-import { useState, useMemo } from 'react';
-import { addMonths, startOfDay, format } from 'date-fns';
+import { useState, useMemo, useRef, useCallback } from 'react';
+import { addMonths, subMonths, startOfDay, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-    
+    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
+    const [slideKey, setSlideKey] = useState(0);
+    const [direction, setDirection] = useState<'left' | 'right'>('left');
+
+    // Touch refs for horizontal swipe, scroll cooldown for wheel
+    const touchStartX = useRef<number | null>(null);
+    const scrollCooldown = useRef(false);
+
+    const goNextMonth = useCallback(() => {
+        setDirection('left');
+        setSlideKey(k => k + 1);
+        setDisplayMonth(m => addMonths(m, 1));
+    }, []);
+
+    const goPrevMonth = useCallback(() => {
+        setDirection('right');
+        setSlideKey(k => k + 1);
+        setDisplayMonth(m => subMonths(m, 1));
+    }, []);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    }, []);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (touchStartX.current === null) return;
+        const delta = touchStartX.current - e.changedTouches[0].clientX;
+        if (Math.abs(delta) > 50) { // 50px horizontal swipe threshold
+            if (delta > 0) goNextMonth(); else goPrevMonth();
+        }
+        touchStartX.current = null;
+    }, [goNextMonth, goPrevMonth]);
+
+    const handleWheel = useCallback((e: React.WheelEvent) => {
+        if (scrollCooldown.current) return;
+        if (Math.abs(e.deltaX) > 20) { // 20px threshold to prevent accidental triggers
+            scrollCooldown.current = true;
+            if (e.deltaX > 0) goNextMonth(); else goPrevMonth();
+            setTimeout(() => { scrollCooldown.current = false; }, 500);
+        }
+    }, [goNextMonth, goPrevMonth]);
+
     const { data: funds = [] } = useFundsQuery();
     const { data: cards = [] } = useCardsQuery();
 
@@ -109,16 +150,26 @@ export default function CalendarPage() {
             </div>
 
             <div className="px-4 pt-6 pb-24 max-w-lg mx-auto flex flex-col gap-6">
-                <div className="bg-[#111] border border-white/[0.08] rounded-2xl p-4 shadow-2xl w-full">
-                    <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        className="w-full flex justify-center text-white"
-                        components={{
-                            DayContent: CustomDay
-                        }}
-                    />
+                <div
+                    className="bg-[#111] border border-white/[0.08] rounded-2xl p-4 shadow-2xl w-full overflow-hidden"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                    onWheel={handleWheel}
+                >
+                    <div
+                        key={slideKey}
+                        className={direction === 'left' ? 'animate-slide-from-right' : 'animate-slide-from-left'}
+                    >
+                        <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            month={displayMonth}
+                            onMonthChange={setDisplayMonth}
+                            className="w-full flex justify-center text-white"
+                            components={{ DayContent: CustomDay }}
+                        />
+                    </div>
                 </div>
                 
                 {/* Details area for the selected date */}

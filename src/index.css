@@ -166,3 +166,21 @@ body {
 .animate-fade-in {
   animation: fade-in-up 0.5s ease-out forwards;
 }
+
+@keyframes slide-fade-from-right {
+  from { transform: translateX(25px) scale(0.98); opacity: 0; }
+  to   { transform: translateX(0) scale(1);       opacity: 1; }
+}
+
+@keyframes slide-fade-from-left {
+  from { transform: translateX(-25px) scale(0.98); opacity: 0; }
+  to   { transform: translateX(0) scale(1);        opacity: 1; }
+}
+
+.animate-slide-from-right {
+  animation: slide-fade-from-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-from-left {
+  animation: slide-fade-from-left 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
