@@ -54,19 +54,7 @@ export default function DashboardPage() {
   };
 
 
-  if (hasError) {
-    return (
-      <div className="animate-fade-in">
-        <DashboardHeader onLogout={handleLogout} />
-        <div className="page-content">
-          <DashboardErrorState
-            error={fundsError || cardsError}
-            onRetry={handleRetry}
-          />
-        </div>
-      </div>
-    );
-  }
+
 
   // Now it's safe to assume data is valid, but still provide defaults
   const safeFunds = funds || [];
@@ -128,6 +116,64 @@ export default function DashboardPage() {
 
   const isEmpty = !fundsLoading && !cardsLoading && safeFunds.length === 0 && safeCards.length === 0;
 
+  // Early returns MUST be here, after all hooks!
+  if (hasError) {
+    return (
+      <div className="animate-fade-in">
+        <DashboardHeader onLogout={handleLogout} />
+        <div className="page-content mt-4">
+          <DashboardErrorState
+            error={fundsError || cardsError}
+            onRetry={handleRetry}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = fundsLoading || cardsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="animate-fade-in">
+        <DashboardHeader onLogout={handleLogout} />
+        <div className="page-content mt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2].map(i => (
+              <div key={i} className="glass-card p-4 h-[116px] flex flex-col justify-end relative overflow-hidden">
+                <div className="absolute top-4 left-4 w-11 h-11 rounded-xl bg-white/5 animate-pulse" />
+                <div className="h-6 w-24 bg-white/5 mb-1.5 rounded animate-pulse" />
+                <div className="h-2.5 w-16 bg-white/5 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+          <div className="glass-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1.5 h-4 bg-emerald-500/50 rounded-full animate-pulse" />
+              <div className="h-4 w-32 bg-white/10 rounded animate-pulse" />
+            </div>
+            <div className="flex gap-2 mb-5">
+              <div className="h-8 w-24 bg-white/5 rounded-lg animate-pulse" />
+              <div className="h-8 w-24 bg-white/5 rounded-lg animate-pulse" />
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="touch-card p-3.5 flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-white/5 animate-pulse" />
+                  <div className="flex-1">
+                    <div className="h-3.5 w-32 bg-white/5 mb-2 rounded animate-pulse" />
+                    <div className="h-2 w-20 bg-white/5 rounded animate-pulse" />
+                  </div>
+                  <div className="h-6 w-16 bg-white/5 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isEmpty) {
     return (
       <div className="animate-fade-in">
@@ -146,7 +192,6 @@ export default function DashboardPage() {
           missedFunds={missedFunds}
           missedCards={missedCards}
           totalMissed={totalMissed}
-          isLoading={fundsLoading || cardsLoading}
         />
 
         <StatsCards
@@ -158,17 +203,12 @@ export default function DashboardPage() {
             totalPaid: totalCardPaid,
             count: safeCards.length
           }}
-          isLoading={{
-            funds: fundsLoading,
-            cards: cardsLoading
-          }}
         />
 
         <UpcomingDues
           funds={upcomingFunds}
           cards={upcomingCards}
           today={today}
-          isLoading={fundsLoading || cardsLoading}
         />
       </div>
     </div>

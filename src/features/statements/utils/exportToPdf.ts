@@ -12,6 +12,22 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
     toast.loading('Generating PDF Statement...', { id: 'pdf-toast' });
 
     try {
+        // We preserve originals to restore them
+        const originalDisplay = input.style.display;
+        const originalPosition = input.style.position;
+        const originalLeft = input.style.left;
+        const originalTop = input.style.top;
+
+        // Temporarily mount the element unconstrained off-screen
+        // This ensures parent 'overflow:hidden' and 'max-w' bounds don't crop the large A4 canvas
+        input.style.display = 'block';
+        input.style.position = 'fixed';
+        input.style.left = '-10000px';
+        input.style.top = '0px';
+
+        // Wait a tiny bit for the browser to recalculate the out-of-flow layout
+        await new Promise(resolve => setTimeout(resolve, 50));
+
         // Capture offscreen element with 2x resolution
         const canvas = await html2canvas(input, {
             scale: 2,
@@ -19,6 +35,12 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
             logging: false,
             backgroundColor: '#ffffff'
         });
+
+        // Restore original display
+        input.style.display = originalDisplay;
+        input.style.position = originalPosition;
+        input.style.left = originalLeft;
+        input.style.top = originalTop;
 
         const imgData = canvas.toDataURL('image/png');
         
@@ -30,10 +52,23 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
         });
 
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        // Calculate height proportional to original canvas and A4 width
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        // Add first page
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        // Loop and add additional pages if content exceeds one page
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
         
         const fileName = customFileName 
             ? `${customFileName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}`

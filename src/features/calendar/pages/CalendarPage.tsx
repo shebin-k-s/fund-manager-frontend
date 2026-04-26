@@ -4,9 +4,9 @@ import { getFundPaymentDates, dateKey, isDatePaid } from '@/features/funds/utils
 import { getBillingCycles } from '@/features/credit-cards/utils/cardDateUtils';
 import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { addMonths, subMonths, startOfDay, format } from 'date-fns';
+import { addMonths, subMonths, startOfDay, format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Landmark, CreditCard, CheckCircle2, Clock, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CalendarPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -14,8 +14,8 @@ export default function CalendarPage() {
     const [slideKey, setSlideKey] = useState(0);
     const [direction, setDirection] = useState<'left' | 'right'>('left');
 
-    // Touch refs for horizontal swipe, scroll cooldown for wheel
     const touchStartX = useRef<number | null>(null);
+    const touchStartY = useRef<number | null>(null);
     const scrollCooldown = useRef(false);
 
     const goNextMonth = useCallback(() => {
@@ -32,20 +32,23 @@ export default function CalendarPage() {
 
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
     }, []);
 
     const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-        if (touchStartX.current === null) return;
-        const delta = touchStartX.current - e.changedTouches[0].clientX;
-        if (Math.abs(delta) > 50) { // 50px horizontal swipe threshold
-            if (delta > 0) goNextMonth(); else goPrevMonth();
+        if (touchStartX.current === null || touchStartY.current === null) return;
+        const deltaX = touchStartX.current - e.changedTouches[0].clientX;
+        const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+            if (deltaX > 0) goNextMonth(); else goPrevMonth();
         }
         touchStartX.current = null;
+        touchStartY.current = null;
     }, [goNextMonth, goPrevMonth]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
         if (scrollCooldown.current) return;
-        if (Math.abs(e.deltaX) > 20) { // 20px threshold to prevent accidental triggers
+        if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
             scrollCooldown.current = true;
             if (e.deltaX > 0) goNextMonth(); else goPrevMonth();
             setTimeout(() => { scrollCooldown.current = false; }, 500);
@@ -55,54 +58,52 @@ export default function CalendarPage() {
     const { data: funds = [] } = useFundsQuery();
     const { data: cards = [] } = useCardsQuery();
 
-    // Map all payments 6 months into the future
     const dueMap = useMemo(() => {
         const map: Record<string, any[]> = {};
         const rangeEnd = addMonths(startOfDay(new Date()), 6);
 
-        // Map Funds
         funds.forEach(fund => {
-            const dates = getFundPaymentDates(fund, rangeEnd);
-            dates.forEach(d => {
+            getFundPaymentDates(fund, rangeEnd).forEach(d => {
                 const k = dateKey(d);
                 if (!map[k]) map[k] = [];
-                map[k].push({
-                    type: 'fund',
-                    id: fund.id,
-                    name: fund.name,
-                    amount: fund.amount,
-                    isPaid: isDatePaid(fund, d)
-                });
+                map[k].push({ type: 'fund', id: fund.id, name: fund.name, amount: fund.amount, isPaid: isDatePaid(fund, d) });
             });
         });
 
-        // Map Cards
         cards.forEach(card => {
-            const cycles = getBillingCycles(card, rangeEnd);
-            cycles.forEach(c => {
+            getBillingCycles(card, rangeEnd).forEach(c => {
                 const k = dateKey(c.dueDate);
                 if (!map[k]) map[k] = [];
-                map[k].push({
-                    type: 'card',
-                    id: card.id,
-                    name: card.name,
-                    amount: c.paidAmount || 0, // Fixed: use paidAmount
-                    isPaid: c.isPaid
-                });
+                map[k].push({ type: 'card', id: card.id, name: card.name, amount: c.paidAmount || 0, isPaid: c.isPaid });
             });
         });
 
         return map;
     }, [funds, cards]);
 
+    // Stats for header
+    const todayKey = dateKey(new Date());
+    const allDays = Object.values(dueMap).flat();
+    const totalPending = allDays.filter(d => !d.isPaid).length;
+    const totalPaid = allDays.filter(d => d.isPaid).length;
+
     const CustomDay = (props: any) => {
         const k = props.date ? dateKey(props.date) : '';
         const markers = dueMap[k];
-        
+        const today = isToday(props.date);
+
         if (!markers || markers.length === 0) {
             return (
-                <div className="flex items-center justify-center w-full h-full text-white/80">
-                    {props.date.getDate()}
+                <div className="flex flex-col items-center justify-center w-full h-full relative">
+                    <span className={cn(
+                        "text-sm",
+                        today ? "font-bold text-white" : "text-white/60"
+                    )}>
+                        {props.date.getDate()}
+                    </span>
+                    {today && (
+                        <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white/70" />
+                    )}
                 </div>
             );
         }
@@ -112,23 +113,33 @@ export default function CalendarPage() {
         const hasPendingCard = markers.some(m => !m.isPaid && m.type === 'card');
 
         return (
-            <div className="flex flex-col items-center justify-center w-full h-full relative group">
-                <span className={cn("font-bold z-10", allPaid ? "text-emerald-400" : "text-white")}>
+            <div className="flex flex-col items-center justify-center w-full h-full relative">
+                {/* Paid day backdrop */}
+                {allPaid && (
+                    <div className="absolute inset-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/25 pointer-events-none" />
+                )}
+                <span className={cn(
+                    "font-bold z-10 text-sm leading-none",
+                    allPaid ? "text-emerald-300" : "text-white"
+                )}>
                     {props.date.getDate()}
                 </span>
-                
-                {/* Visual Backdrop for entirely Paid days */}
-                {allPaid && (
-                    <div className="absolute inset-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 pointer-events-none" />
+                {/* Today indicator — sits above the payment dots */}
+                {today && (
+                    <span className="absolute top-1 right-1 w-1 h-1 rounded-full bg-white/60 z-20" />
                 )}
-
-                {/* Glowing Dot markings purely for Pending items */}
-                {!allPaid && (
-                    <div className="flex gap-1 absolute bottom-1 z-10">
-                        {hasPendingFund && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]" title="Pending Fund" />}
-                        {hasPendingCard && <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.8)]" title="Pending Card" />}
-                    </div>
-                )}
+                {/* Payment dots row */}
+                <div className="flex gap-0.5 absolute bottom-1 z-10">
+                    {hasPendingFund && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.9)]" />
+                    )}
+                    {hasPendingCard && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.9)]" />
+                    )}
+                    {allPaid && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.9)]" />
+                    )}
+                </div>
             </div>
         );
     };
@@ -138,84 +149,193 @@ export default function CalendarPage() {
 
     return (
         <div className="animate-fade-in bg-background min-h-full">
+            {/* Sticky Header */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-white/10 shadow-sm">
                 <div className="px-5 pt-5 pb-4 flex items-center justify-between max-w-lg mx-auto">
                     <div>
                         <h1 className="text-xl font-bold text-white">Calendar</h1>
                         <p className="text-xs text-muted-foreground mt-0.5 tracking-wider uppercase font-semibold">
-                            Upcoming Schedules
+                            Payment Schedule
                         </p>
                     </div>
+
                 </div>
             </div>
 
-            <div className="px-4 pt-6 pb-24 max-w-lg mx-auto flex flex-col gap-6">
+            <div className="px-4 pt-5 pb-28 max-w-lg mx-auto flex flex-col gap-5">
+
+                {/* Calendar Card */}
                 <div
-                    className="bg-[#111] border border-white/[0.08] rounded-2xl p-4 shadow-2xl w-full overflow-hidden"
+                    className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/[0.07]"
                     onTouchStart={handleTouchStart}
                     onTouchEnd={handleTouchEnd}
                     onWheel={handleWheel}
                 >
-                    <div
-                        key={slideKey}
-                        className={direction === 'left' ? 'animate-slide-from-right' : 'animate-slide-from-left'}
-                    >
-                        <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            month={displayMonth}
-                            onMonthChange={setDisplayMonth}
-                            className="w-full flex justify-center text-white"
-                            components={{ DayContent: CustomDay }}
-                        />
+
+
+                    {/* Month nav header */}
+                    <div className="bg-[#0d0d0d] px-5 py-3 flex items-center justify-between border-b border-white/[0.06]">
+                        <button
+                            onClick={goPrevMonth}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <CalendarDays className="w-4 h-4 text-blue-400" />
+                            <span className="font-bold text-white/90 text-sm tracking-wide">
+                                {format(displayMonth, 'MMMM yyyy')}
+                            </span>
+                        </div>
+                        <button
+                            onClick={goNextMonth}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Calendar grid */}
+                    <div className="bg-[#0d0d0d] px-2 pb-3">
+                        <div
+                            key={slideKey}
+                            className={direction === 'left' ? 'animate-slide-from-right' : 'animate-slide-from-left'}
+                        >
+                            <Calendar
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                month={displayMonth}
+                                onMonthChange={setDisplayMonth}
+                                className="w-full"
+                                classNames={{
+                                    months: "flex flex-col",
+                                    month: "space-y-1",
+                                    caption: "hidden",           // We use our own header
+                                    nav: "hidden",               // We use our own nav
+                                    table: "w-full border-collapse",
+                                    head_row: "flex mb-1",
+                                    head_cell: "flex-1 text-center text-[10px] font-bold uppercase tracking-widest text-white/30 py-2",
+                                    row: "flex w-full",
+                                    cell: "flex-1 aspect-square p-0.5 relative",
+                                    day: "w-full h-full rounded-xl text-sm font-medium transition-all duration-200 hover:bg-white/5 aria-selected:bg-blue-600/30 aria-selected:border aria-selected:border-blue-500/50 aria-selected:text-white",
+                                    day_today: "",
+                                    day_outside: "opacity-20",
+                                    day_disabled: "opacity-20",
+                                    day_selected: "bg-blue-600/30 border border-blue-500/50 text-white hover:bg-blue-600/40",
+                                    day_range_middle: "",
+                                    day_range_end: "",
+                                    day_hidden: "invisible",
+                                }}
+                                components={{ DayContent: CustomDay }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Legend strip */}
+                    <div className="bg-[#0a0a0a] border-t border-white/[0.06] px-4 py-2.5 flex items-center justify-center gap-5">
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.9)]" />
+                            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Fund</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.9)]" />
+                            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Card</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.9)]" />
+                            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Paid</span>
+                        </div>
                     </div>
                 </div>
-                
-                {/* Details area for the selected date */}
+
+                {/* Selected date panel */}
                 <div className="w-full">
-                    <h3 className="text-sm font-semibold text-white mb-3 px-1">
-                        {selectedDate ? format(selectedDate, 'EEEE, MMMM do yyyy') : 'Select a date'}
-                    </h3>
-                    
+                    {/* Date heading */}
+                    <div className="flex items-center gap-2 mb-3 px-1">
+                        <div className="w-1 h-4 rounded-full bg-blue-500/70" />
+                        <h3 className="text-sm font-bold text-white/90">
+                            {selectedDate ? format(selectedDate, 'EEEE, MMMM do') : 'Select a date'}
+                        </h3>
+                        {selectedDate && isToday(selectedDate) && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">
+                                Today
+                            </span>
+                        )}
+                    </div>
+
                     {dayData.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-white/10 p-6 flex flex-col items-center text-center">
-                            <p className="text-sm text-gray-500">No payments scheduled on this date.</p>
+                        <div className="rounded-2xl border border-dashed border-white/10 p-8 flex flex-col items-center text-center gap-2 bg-white/[0.02]">
+                            <CalendarDays className="w-8 h-8 text-white/10" />
+                            <p className="text-sm text-white/30 font-medium">No payments on this day</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-3">
-                            {dayData.map((data, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.03] shadow-md">
-                                    <div className="flex items-center gap-3.5">
+                        <div className="flex flex-col gap-2.5">
+                            {dayData.map((data: any, i: number) => {
+                                const isPaid = data.isPaid;
+                                const isFund = data.type === 'fund';
+
+                                const accentColor = isPaid
+                                    ? 'text-emerald-400'
+                                    : isFund ? 'text-blue-400' : 'text-amber-400';
+                                const bgColor = isPaid
+                                    ? 'bg-emerald-500/10 border-emerald-500/20'
+                                    : isFund ? 'bg-blue-500/10 border-blue-500/20' : 'bg-amber-500/10 border-amber-500/20';
+                                const dotGlow = isPaid
+                                    ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                                    : isFund ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]' : 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]';
+
+                                return (
+                                    <div
+                                        key={i}
+                                        className={cn(
+                                            "flex items-center gap-4 p-4 rounded-2xl border transition-all",
+                                            "bg-white/[0.03] border-white/[0.06]",
+                                            "hover:bg-white/[0.06] hover:border-white/10"
+                                        )}
+                                    >
+                                        {/* Icon */}
                                         <div className={cn(
-                                            "w-3 h-3 rounded-full shrink-0 flex items-center justify-center",
-                                            data.isPaid ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                                            data.type === 'fund' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]'
-                                        )} />
-                                        <div>
-                                            <p className="text-sm font-semibold text-white tracking-wide">{data.name}</p>
-                                            <p className={cn("text-[10px] uppercase tracking-widest font-bold mt-1", data.isPaid ? "text-emerald-400" : "text-gray-500")}>
-                                                {data.type} • {data.isPaid ? 'PAID' : 'PENDING'}
-                                            </p>
+                                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
+                                            bgColor
+                                        )}>
+                                            {isFund
+                                                ? <Landmark className={cn("w-4.5 h-4.5", accentColor)} />
+                                                : <CreditCard className={cn("w-4.5 h-4.5", accentColor)} />
+                                            }
                                         </div>
-                                    </div>
-                                    
-                                    <div className="text-right flex flex-col items-end">
-                                        {data.isPaid ? (
-                                            <>
-                                                <span className="text-[10px] text-emerald-500/80 font-bold uppercase tracking-widest mb-0.5">Paid Details</span>
-                                                <span className="text-sm font-mono font-bold text-emerald-400">
-                                                    ₹{data.amount?.toLocaleString('en-IN') || 0}
+
+                                        {/* Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-white/90 truncate">{data.name}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <span className={cn(
+                                                    "w-1.5 h-1.5 rounded-full shrink-0",
+                                                    dotGlow
+                                                )} />
+                                                <p className={cn("text-[10px] uppercase tracking-widest font-bold", accentColor)}>
+                                                    {data.type} · {isPaid ? 'Paid' : 'Pending'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Amount badge */}
+                                        {(data.amount > 0 || isFund) && (
+                                            <div className={cn(
+                                                "flex flex-col items-end shrink-0 px-3 py-2 rounded-xl border",
+                                                bgColor
+                                            )}>
+                                                {isPaid && (
+                                                    <span className="text-[9px] uppercase tracking-widest font-bold text-emerald-500/60 mb-0.5">Paid</span>
+                                                )}
+                                                <span className={cn("text-sm font-mono font-bold tabular-nums", accentColor)}>
+                                                    ₹{(data.amount || 0).toLocaleString('en-IN')}
                                                 </span>
-                                            </>
-                                        ) : data.type === 'fund' ? (
-                                            <span className="text-sm font-mono font-semibold text-gray-300">
-                                                ₹{data.amount?.toLocaleString('en-IN') || 0}
-                                            </span>
-                                        ) : null}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

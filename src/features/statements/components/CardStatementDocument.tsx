@@ -10,14 +10,14 @@ export function CardStatementDocument({ card }: CardStatementDocumentProps) {
     const cycles = getBillingCycles(card);
     
     return (
-        <div id="card-statement-container" className="fixed -left-[10000px] top-0 bg-white">
+        <div id="card-statement-container" className="hidden">
             <div className="bg-white text-black w-[794px] min-h-[1123px] overflow-hidden p-12 font-sans relative"
                  style={{ fontFamily: "'Inter', 'Helvetica', sans-serif" }}>
                 
                 {/* Header */}
                 <div className="flex justify-between items-end border-b-2 border-gray-200 pb-6 mb-8">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">FinTrack.</h1>
+                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">Velo.</h1>
                         <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mt-1">Credit Card Statement</p>
                     </div>
                     <div className="text-right">
@@ -48,7 +48,7 @@ export function CardStatementDocument({ card }: CardStatementDocumentProps) {
                                         <td className="py-4 px-4 font-medium">{cycle.month}</td>
                                         <td className="py-4 px-4">{format(cycle.dueDate, 'dd MMM yyyy')}</td>
                                         <td className="py-4 px-4">
-                                            <span className={`px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full ${
+                                            <span className={`inline-flex items-center justify-center leading-none px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full ${
                                                 cycle.isPaid ? 'bg-green-100 text-green-800' :
                                                 cycle.isOverdue ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                                             }`}>

@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { addMonths, subMonths, isSameMonth, startOfDay, startOfMonth, isAfter, isBefore } from 'date-fns';
-import { useFundById, useDeleteFund, useMarkFundPaid, useRemoveFundPayment } from '../hooks/useFunds';
+import { useFundById, useMarkFundPaid, useRemoveFundPayment } from '../hooks/useFunds';
 import { getFundPaymentDates, getMissedCount, DAY_NAMES_FULL, dateKey } from '../utils/fundDateUtils';
-import { DeleteSection } from '../components/fundDetail/DeleteSection';
 import { FundHeader } from '../components/fundDetail/FundHeader';
 import { MissedAlert } from '../components/fundDetail/MissedAlert';
 import { MonthNavigation } from '../components/fundDetail/MonthNavigation';
@@ -17,11 +16,15 @@ export default function FundDetailPage() {
   const navigate = useNavigate();
 
   const { data: fund, isLoading } = useFundById(id!);
-  const deleteFund = useDeleteFund();
   const markPaid = useMarkFundPaid();
   const removePayment = useRemoveFundPayment();
 
   const [viewMonth, setViewMonth] = useState(new Date());
+
+  // Touch and wheel swipe state
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const scrollCooldown = useRef(false);
 
   // Show loading state
   if (isLoading) {
@@ -62,6 +65,9 @@ export default function FundDetailPage() {
   const totalInvested = fund.payments?.reduce((s, p) => s + (typeof p.amount === 'string' ? parseFloat(p.amount) : p.amount), 0) ?? 0;
   const totalPayments = fund.payments?.length ?? 0;
   const missed = getMissedCount(fund);
+  
+  // Calculate Target (only if there's an end date, otherwise it's ongoing)
+  const targetInvestment = fund.endDate ? (allDates.length * fund.amount) : null;
 
   const recurrenceLabel = fund.recurrence === 'weekly'
     ? `Every ${DAY_NAMES_FULL[fund.dayOfWeek!]}`
@@ -77,6 +83,42 @@ export default function FundDetailPage() {
   const canGoPrev = isAfter(currentBoundary, startBoundary);
   const canGoNext = isBefore(currentBoundary, endBoundary);
 
+  const goPrevMonth = () => {
+    if (canGoPrev) setViewMonth(m => subMonths(m, 1));
+  };
+
+  const goNextMonth = () => {
+    if (canGoNext) setViewMonth(m => addMonths(m, 1));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = touchStartX.current - e.changedTouches[0].clientX;
+    const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+    
+    // Only trigger swipe if horizontal movement is prominent and exceeds threshold
+    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX > 0) goNextMonth(); else goPrevMonth();
+    }
+    
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (scrollCooldown.current) return;
+    if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) { // 20px threshold and prominent horizontal
+      scrollCooldown.current = true;
+      if (e.deltaX > 0) goNextMonth(); else goPrevMonth();
+      setTimeout(() => { scrollCooldown.current = false; }, 500);
+    }
+  };
+
   const handlePay = (dateStr: string) => {
     if (fund) {
       markPaid.mutate({ fundId: fund.id, date: dateStr, amount: fund.amount });
@@ -89,15 +131,7 @@ export default function FundDetailPage() {
     }
   };
 
-  const handleDelete = () => {
-    if (fund) {
-      deleteFund.mutate(fund.id, {
-        onSuccess: () => navigate('/funds')
-      });
-    }
-  };
-
-  const isPending = markPaid.isPending || removePayment.isPending || deleteFund.isPending;
+  const isPending = markPaid.isPending || removePayment.isPending;
 
   return (
     <div className="animate-fade-in">
@@ -109,12 +143,19 @@ export default function FundDetailPage() {
         isLoading={false}
       />
 
-      <div className="page-content">
+      <div 
+        className="page-content"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
+      >
         <MissedAlert missed={missed} isLoading={false} />
 
         <FundStatsCards
+          target={targetInvestment}
           invested={totalInvested}
           payments={totalPayments}
+          totalTerms={fund.endDate ? allDates.length : null}
           missed={missed}
           isLoading={false}
         />
@@ -123,8 +164,8 @@ export default function FundDetailPage() {
           viewMonth={viewMonth}
           canGoPrev={canGoPrev}
           canGoNext={canGoNext}
-          onPrev={() => setViewMonth(m => subMonths(m, 1))}
-          onNext={() => setViewMonth(m => addMonths(m, 1))}
+          onPrev={goPrevMonth}
+          onNext={goNextMonth}
           isLoading={false}
         />
 
@@ -137,8 +178,6 @@ export default function FundDetailPage() {
           isPending={isPending}
           isLoading={false}
         />
-
-        <DeleteSection onDelete={handleDelete} isPending={deleteFund.isPending} />
         
         <FundStatementDocument fund={fund} />
       </div>

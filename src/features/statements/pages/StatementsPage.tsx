@@ -127,46 +127,52 @@ export default function StatementsPage() {
     };
 
     return (
-        <div className="animate-fade-in bg-background flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 80px)' }}>
+        <div className="animate-fade-in bg-background min-h-full">
 
-            {/* ── Header: filters — never scrolls ── */}
-            <div className="shrink-0 z-10 bg-background/95 backdrop-blur-xl border-b border-white/5 pb-4 px-4 pt-6">
+            {/* ── Header: filters — sticky, never scrolls away ── */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-white/5 pt-5 pb-4 px-4">
                 <div className="max-w-lg mx-auto flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
                             <FileText className="w-5 h-5 text-emerald-400" />
                             Statements
                         </h1>
-                        <p className="text-xs text-muted-foreground mt-1 tracking-wider uppercase font-semibold">
-                            Advanced Reporting
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5 tracking-wider uppercase font-semibold">Advanced Reporting</p>
                     </div>
-                    
-                    <button onClick={handleExport} title="Export Current View to PDF" className="h-10 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 bg-white/[0.04] border border-white/[0.08] text-gray-300 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/20">
+                    <button onClick={handleExport} title="Export Current View to PDF" className="h-9 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 bg-white/[0.04] border border-white/[0.08] text-gray-300 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/20">
                         <FileText className="w-4 h-4" />
                         <span className="text-sm font-semibold hidden sm:inline">Export PDF</span>
                     </button>
                 </div>
 
-                <div className="max-w-lg mx-auto mt-6 flex flex-col gap-4">
+                <div className="max-w-lg mx-auto mt-4 flex flex-col gap-3">
                     {/* View Mode Toggle */}
                     <div className="flex bg-[#111] rounded-xl border border-white/5 p-1">
-                        <button onClick={() => setViewMode('month')} className={cn("flex-1 py-2 text-xs font-semibold rounded-lg transition-all", viewMode === 'month' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Month View</button>
-                        <button onClick={() => setViewMode('entity')} className={cn("flex-1 py-2 text-xs font-semibold rounded-lg transition-all", viewMode === 'entity' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Entity View</button>
+                        <button onClick={() => setViewMode('month')} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'month' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Month View</button>
+                        <button onClick={() => setViewMode('entity')} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'entity' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Entity View</button>
                     </div>
+
+                    {/* Sub-filter chips — month mode only */}
+                    {viewMode !== 'entity' && (
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setSubType('all')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'all' ? "bg-white text-black" : "border border-white/10 text-gray-400 hover:text-white")}>All</button>
+                            <button onClick={() => setSubType('fund')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'fund' ? "bg-blue-500 text-white" : "border border-white/10 text-gray-400 hover:text-white")}>Funds</button>
+                            <button onClick={() => setSubType('card')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'card' ? "bg-purple-500 text-white" : "border border-white/10 text-gray-400 hover:text-white")}>Cards</button>
+                        </div>
+                    )}
 
                     {/* Contextual Nav Row: Primary filter dependent on mode */}
                     <div>
                         {viewMode === 'month' ? (
                             <div className="flex flex-col gap-2">
                                 {/* Year Selector */}
-                                <div className="w-full overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                    <div className="flex items-center gap-2 px-1 w-max">
+                                <div className="w-full overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                    <div className="flex items-center gap-1.5 px-0.5 w-max">
                                         {yearOptions.map(y => (
                                             <button 
                                                 key={y} 
                                                 onClick={() => setActiveMonthKey(`${y}-${activeMonthStr}`)}
-                                                className={cn("px-4 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0", activeYearStr === y.toString() ? "bg-white/10 text-white shadow-sm border border-white/20" : "bg-transparent text-gray-500 hover:text-white")}
+                                                className={cn("px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0", activeYearStr === y.toString() ? "bg-white/10 text-white border border-white/20" : "bg-transparent text-gray-500 hover:text-white")}
                                             >
                                                 {y}
                                             </button>
@@ -175,7 +181,7 @@ export default function StatementsPage() {
                                 </div>
                                 
                                 {/* Month Selector */}
-                                <div className="w-full overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                <div className="w-full overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                     <div className="flex items-center gap-2 px-1 w-max">
                                         {monthOptionsList.map(m => {
                                             const monthStr = m.toString().padStart(2, '0');
@@ -184,7 +190,7 @@ export default function StatementsPage() {
                                                 <button 
                                                     key={m} 
                                                     onClick={() => setActiveMonthKey(`${activeYearStr}-${monthStr}`)}
-                                                    className={cn("px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all shrink-0", activeMonthStr === monthStr ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-[#111] border border-white/5 text-gray-400 hover:bg-white/5 hover:text-white")}
+                                                    className={cn("px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0", activeMonthStr === monthStr ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-[#111] border border-white/5 text-gray-400 hover:bg-white/5 hover:text-white")}
                                                 >
                                                     {monthLabel}
                                                 </button>
@@ -265,20 +271,11 @@ export default function StatementsPage() {
                         )}
                     </div>
 
-                    {/* Multi-chip filter row */}
-                    {viewMode !== 'entity' && (
-                        <div className="flex items-center gap-2 pb-2">
-                            {/* Entity Type Subfilter for Month/Year */}
-                            <button onClick={() => setSubType('all')} className={cn("px-4 py-2 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'all' ? "bg-white text-black shadow-md" : "border border-white/10 text-gray-400 hover:text-white")}>All Entities</button>
-                            <button onClick={() => setSubType('fund')} className={cn("px-4 py-2 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'fund' ? "bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.3)]" : "border border-white/10 text-gray-400 hover:text-white")}>Funds Only</button>
-                            <button onClick={() => setSubType('card')} className={cn("px-4 py-2 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'card' ? "bg-purple-500 text-white shadow-[0_0_12px_rgba(168,85,247,0.3)]" : "border border-white/10 text-gray-400 hover:text-white")}>Cards Only</button>
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {/* ── Body: metrics (pinned) + list (scrollable) ── */}
-            <div className="flex-1 min-h-0 flex flex-col w-full max-w-lg mx-auto px-4 pt-4 overflow-hidden">
+            {/* ── Body: metrics + natural-scroll list ── */}
+            <div className="w-full max-w-lg mx-auto px-4 pt-4">
 
                 {/* Summary metrics — always visible */}
                 <div className="shrink-0 grid grid-cols-3 gap-2 pb-3">
@@ -296,7 +293,7 @@ export default function StatementsPage() {
                     </div>
                 </div>
 
-                {/* List — only this area scrolls, only when items overflow */}
+                {/* List — naturally scrolls with the page */}
                 {finalRows.length === 0 ? (
                     <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
                         <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
@@ -304,8 +301,7 @@ export default function StatementsPage() {
                         <p className="text-xs text-gray-500 mt-1">Adjust filters to see history.</p>
                     </div>
                 ) : (
-                    <div className="flex-1 min-h-0 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        <div className="space-y-2 pb-4">
+                    <div className="space-y-2 pb-28">
                             {finalRows.map(row => (
                                 <div key={row.id} className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a]">
                                     <div className="flex items-start gap-3">
@@ -343,7 +339,6 @@ export default function StatementsPage() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
                     </div>
                 )}
             </div>

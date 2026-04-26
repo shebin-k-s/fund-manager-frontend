@@ -3,7 +3,8 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, CalendarIcon } from 'lucide-react';
 import { useFundById } from '../hooks/useFunds';
-import { useUpdateFund } from '../hooks/useFunds';
+import { useUpdateFund, useDeleteFund } from '../hooks/useFunds';
+import { DeleteSection } from '../components/fundDetail/DeleteSection';
 import { DAY_NAMES } from '../utils/fundDateUtils';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
@@ -17,6 +18,7 @@ export default function EditFundPage() {
   // Use React Query hooks instead of useAppSelector
   const { data: fund, isLoading } = useFundById(id!);
   const updateFund = useUpdateFund();
+  const deleteFund = useDeleteFund();
 
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -77,6 +79,14 @@ export default function EditFundPage() {
     }, {
       onSuccess: () => navigate(`/funds/${fund.id}`)
     });
+  };
+
+  const handleDelete = () => {
+    if (fund) {
+      deleteFund.mutate(fund.id, {
+        onSuccess: () => navigate('/funds')
+      });
+    }
   };
 
   return (
@@ -185,6 +195,8 @@ export default function EditFundPage() {
         >
           {updateFund.isPending ? 'Saving...' : 'Save Changes'}
         </button>
+
+        <DeleteSection onDelete={handleDelete} isPending={deleteFund.isPending} />
       </div>
     </div>
   );

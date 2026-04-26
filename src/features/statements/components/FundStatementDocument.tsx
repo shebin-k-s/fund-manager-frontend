@@ -13,17 +13,19 @@ export function FundStatementDocument({ fund }: FundStatementDocumentProps) {
         totalScheduled: fund.amount * dates.length,
         totalPaid: dates.filter(d => isDatePaid(fund, d)).length * fund.amount,
         missedPayments: dates.filter(d => d < new Date() && !isDatePaid(fund, d)).length,
+        totalTerms: dates.length,
+        paidTerms: dates.filter(d => isDatePaid(fund, d)).length,
     };
 
     return (
-        <div id="fund-statement-container" className="fixed -left-[10000px] top-0 bg-white">
+        <div id="fund-statement-container" className="hidden">
             <div className="bg-white text-black w-[794px] min-h-[1123px] overflow-hidden p-12 font-sans relative"
                  style={{ fontFamily: "'Inter', 'Helvetica', sans-serif" }}>
                 
                 {/* Header */}
                 <div className="flex justify-between items-end border-b-2 border-gray-200 pb-6 mb-8">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">FinTrack.</h1>
+                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">Velo.</h1>
                         <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mt-1">Fund Statement</p>
                     </div>
                     <div className="text-right">
@@ -41,7 +43,10 @@ export function FundStatementDocument({ fund }: FundStatementDocumentProps) {
                         </div>
                         <div>
                             <p className="text-xs uppercase text-gray-500 font-semibold tracking-wider">Total Paid</p>
-                            <p className="text-2xl font-bold font-mono text-green-700">₹{(stats.totalPaid || 0).toLocaleString()}</p>
+                            <div className="flex items-baseline gap-2 mt-0.5">
+                                <p className="text-2xl font-bold font-mono text-green-700">₹{(stats.totalPaid || 0).toLocaleString()}</p>
+                                <p className="text-xs font-bold text-green-600/60 uppercase tracking-widest">({stats.paidTerms}/{stats.totalTerms})</p>
+                            </div>
                         </div>
                         <div>
                             <p className="text-xs uppercase text-red-500 font-semibold tracking-wider">Missed Terms</p>
@@ -72,13 +77,13 @@ export function FundStatementDocument({ fund }: FundStatementDocumentProps) {
                                         <tr key={i} className="hover:bg-gray-50/50">
                                             <td className="py-4 px-4 font-medium text-center text-gray-400">{i + 1}</td>
                                             <td className="py-4 px-4">{format(date, 'dd MMM yyyy')}</td>
-                                            <td className="py-4 px-4">
+                                            <td className="py-4 px-4 align-middle">
                                                 {isPaid ? (
-                                                    <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full bg-green-100 text-green-800">Paid</span>
+                                                    <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-green-100 text-green-800 align-middle">Paid</span>
                                                 ) : isPast ? (
-                                                    <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full bg-red-100 text-red-800">Missed</span>
+                                                    <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-red-100 text-red-800 align-middle">Missed</span>
                                                 ) : (
-                                                    <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full bg-blue-100 text-blue-800">Scheduled</span>
+                                                    <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-blue-100 text-blue-800 align-middle">Scheduled</span>
                                                 )}
                                             </td>
                                             <td className="py-4 px-4 text-right font-mono font-semibold">

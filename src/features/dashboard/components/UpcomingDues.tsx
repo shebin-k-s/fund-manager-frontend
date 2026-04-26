@@ -28,7 +28,7 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
       </div>
 
       {/* Tab header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div className="flex bg-white/5 rounded-xl p-1 gap-1">
           <button
             onClick={() => setActiveTab('funds')}
@@ -74,15 +74,17 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
 
         {/* See All link */}
         {!isLoading && (
-          activeTab === 'funds' && funds.length > 0 ? (
-            <Link to="/funds" className="text-[10px] uppercase font-bold tracking-wider text-blue-300/60 hover:text-blue-300 transition-colors">
-              See All
-            </Link>
-          ) : activeTab === 'cards' && cards.length > 0 ? (
-            <Link to="/cards" className="text-[10px] uppercase font-bold tracking-wider text-white/50 hover:text-white transition-colors">
-              See All
-            </Link>
-          ) : null
+          <div className="self-end sm:self-auto">
+            {activeTab === 'funds' && funds.length > 0 ? (
+              <Link to="/funds" className="text-[10px] uppercase font-bold tracking-wider text-blue-300/60 hover:text-blue-300 transition-colors">
+                See All
+              </Link>
+            ) : activeTab === 'cards' && cards.length > 0 ? (
+              <Link to="/cards" className="text-[10px] uppercase font-bold tracking-wider text-white/50 hover:text-white transition-colors">
+                See All
+              </Link>
+            ) : null}
+          </div>
         )}
       </div>
 

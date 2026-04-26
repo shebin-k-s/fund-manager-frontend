@@ -47,17 +47,17 @@ export function StatementDocument({ funds, cards }: StatementDocumentProps) {
     return (
         <div 
             id="pdf-statement-container" 
-            className="fixed -left-[10000px] top-0 bg-white"
+            className="hidden"
         >
             {/* A4 Document Container - Strict Dimensions & Styling */}
             <div 
-                className="bg-white text-black w-[794px] h-[1123px] overflow-hidden p-12 font-sans relative"
+                className="bg-white text-black w-[794px] min-h-[1123px] overflow-hidden p-12 font-sans relative flex flex-col"
                 style={{ fontFamily: "'Inter', 'Helvetica', sans-serif" }}
             >
                 {/* Header */}
                 <div className="flex justify-between items-end border-b-2 border-gray-200 pb-6 mb-8">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">FinTrack.</h1>
+                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">Velo.</h1>
                         <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mt-1">Official Statement</p>
                     </div>
                     <div className="text-right">
@@ -92,7 +92,7 @@ export function StatementDocument({ funds, cards }: StatementDocumentProps) {
                                             <td className="py-4 px-4 font-medium">{entry.name}</td>
                                             <td className="py-4 px-4">{format(entry.dueDate, 'dd MMM yyyy')}</td>
                                             <td className="py-4 px-4">
-                                                <span className={`px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full ${entry.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                <span className={`inline-block align-middle px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full ${entry.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                                     {entry.isPaid ? 'Paid' : 'Pending'}
                                                 </span>
                                             </td>
@@ -129,7 +129,7 @@ export function StatementDocument({ funds, cards }: StatementDocumentProps) {
                                             <td className="py-4 px-4 font-medium">{entry.name}</td>
                                             <td className="py-4 px-4">{format(entry.dueDate, 'dd MMM yyyy')}</td>
                                             <td className="py-4 px-4">
-                                                <span className={`px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full ${entry.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                <span className={`inline-block align-middle px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full ${entry.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                                     {entry.isPaid ? 'Paid' : 'Pending'}
                                                 </span>
                                             </td>
@@ -150,9 +150,10 @@ export function StatementDocument({ funds, cards }: StatementDocumentProps) {
                 </div>
 
                 {/* Footer */}
-                <div className="absolute bottom-12 left-12 right-12 border-t border-gray-200 pt-6 flex justify-between items-center">
-                    <p className="text-xs text-gray-400 font-medium tracking-wide">CONFIDENTIAL & PRIVATE</p>
-                    <p className="text-xs text-gray-400">Page 1 of 1</p>
+                <div className="mt-auto pt-12">
+                    <div className="border-t border-gray-200 pt-6 text-center">
+                        <p className="text-xs text-gray-400 font-medium tracking-wide">CONFIDENTIAL & PRIVATE</p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -16,14 +16,14 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
     const statusPrefix = statusFilter === 'paid' ? 'Paid ' : statusFilter === 'overdue' ? 'Overdue ' : statusFilter === 'pending' ? 'Pending ' : '';
     
     return (
-        <div id="dynamic-statement-container" className="fixed -left-[10000px] top-0 bg-white">
+        <div id="dynamic-statement-container" className="hidden">
             <div className="bg-white text-black w-[794px] min-h-[1123px] overflow-hidden p-12 font-sans relative"
                  style={{ fontFamily: "'Inter', 'Helvetica', sans-serif" }}>
                 
                 {/* Header */}
                 <div className="flex justify-between items-end border-b-2 border-gray-200 pb-6 mb-8">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">FinTrack.</h1>
+                        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight">Velo.</h1>
                         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">
                             {statusPrefix}{typePrefix} Statement
                         </p>
@@ -77,13 +77,13 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
                                                 <td className="py-4 px-4 font-semibold text-gray-400 capitalize">{row.type}</td>
                                                 <td className="py-4 px-4 font-medium">{row.name}</td>
                                                 <td className="py-4 px-4 whitespace-nowrap text-xs">{row.dateLabel || format(row.dueDate, 'dd MMM yyyy')}</td>
-                                                <td className="py-4 px-4">
+                                                <td className="py-4 px-4 align-middle">
                                                     {row.isPaid ? (
-                                                        <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full bg-green-100 text-green-800">Paid</span>
+                                                        <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-green-100 text-green-800 align-middle">Paid</span>
                                                     ) : row.dueDate < new Date() ? (
-                                                        <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full bg-red-100 text-red-800">Missed</span>
+                                                        <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-red-100 text-red-800 align-middle">Missed</span>
                                                     ) : (
-                                                        <span className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-full bg-blue-100 text-blue-800">Pending</span>
+                                                        <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-blue-100 text-blue-800 align-middle">Pending</span>
                                                     )}
                                                 </td>
                                                 <td className="py-4 px-4 text-right font-mono font-semibold">
