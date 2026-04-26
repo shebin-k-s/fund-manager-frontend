@@ -26,8 +26,11 @@ export default function Layout() {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="absolute bottom-0 w-full max-w-md z-50">
-          <nav className="bg-card/95 backdrop-blur-xl border-t border-border flex justify-between items-center px-4 pb-safe pt-2 h-[72px]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
+          <nav
+            className="bg-card/95 backdrop-blur-xl border-t border-border flex justify-between items-center px-4 pt-2 w-full max-w-md"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)', minHeight: '64px' }}
+          >
             {tabs.map(tab => {
               const active = isActive(tab.path);
               return (
