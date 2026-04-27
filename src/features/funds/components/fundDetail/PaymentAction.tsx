@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 
 interface PaymentActionProps {
     date: string;
@@ -26,7 +26,7 @@ export function PaymentAction({
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors disabled:opacity-50"
                 >
                     {isPending ? (
-                        <>Removing...</>
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Removing...</>
                     ) : (
                         <><X className="w-4 h-4" /> Remove Payment</>
                     )}
@@ -35,10 +35,10 @@ export function PaymentAction({
                 <button
                     onClick={onPay}
                     disabled={isPending}
-                    className="w-full bg-primary text-primary-foreground py-2.5 rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-2.5 rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                     {isPending ? (
-                        'Processing...'
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
                     ) : (
                         `Mark as Paid · ₹${amount.toLocaleString('en-IN')}`
                     )}

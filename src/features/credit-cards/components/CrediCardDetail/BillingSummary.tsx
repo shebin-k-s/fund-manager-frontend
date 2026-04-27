@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, isBefore, isAfter } from 'date-fns';
-import { Check, X, AlertCircle, Calendar, Clock, ChevronDown, ChevronUp, CreditCardIcon, DollarSign, Eye, EyeOff } from 'lucide-react';
+import { Check, X, AlertCircle, Calendar, Clock, ChevronDown, ChevronUp, CreditCardIcon, DollarSign, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuickPayment } from './QuickPayment';
 import { getBillingCycles } from '../../utils/cardDateUtils';
@@ -64,9 +64,6 @@ export function CardPaymentStatus({
     setRemovingCycle(cycleId);
     try {
       await onRemove(cycleId);
-      toast.success('Payment removed successfully');
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to remove payment');
     } finally {
       setRemovingCycle(null);
     }
@@ -239,9 +236,11 @@ export function CardPaymentStatus({
                     <button
                       onClick={() => setPayingCycle(cycle.id)}
                       disabled={isPending}
-                      className="w-full py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors border border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors border border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Pay Now
+                      {isPending && payingCycle === cycle.id ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                      ) : 'Pay Now'}
                     </button>
                   </div>
                 </div>
@@ -308,9 +307,11 @@ export function CardPaymentStatus({
                     <button
                       onClick={() => setPayingCycle(cycle.id)}
                       disabled={isPending}
-                      className="w-full py-2.5 rounded-lg bg-blue-500/10 text-blue-400 text-sm font-medium hover:bg-blue-500/20 transition-colors border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-blue-500/10 text-blue-400 text-sm font-medium hover:bg-blue-500/20 transition-colors border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Pay Now
+                      {isPending && payingCycle === cycle.id ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                      ) : 'Pay Now'}
                     </button>
                   </div>
                 </div>
@@ -386,9 +387,11 @@ export function CardPaymentStatus({
                       <button
                         onClick={() => handleRemovePayment(cycle.id)}
                         disabled={isPending || isRemoving}
-                        className="text-xs text-red-400 hover:text-red-300 self-start disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-xs text-red-400 hover:text-red-300 self-start disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                       >
-                        {isRemoving ? 'Removing...' : 'Remove payment'}
+                        {isRemoving ? (
+                          <><Loader2 className="w-3 h-3 animate-spin" /> Removing...</>
+                        ) : 'Remove payment'}
                       </button>
                     </div>
                   </div>

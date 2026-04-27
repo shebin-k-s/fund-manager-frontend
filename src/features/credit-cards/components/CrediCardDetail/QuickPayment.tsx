@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface QuickPaymentProps {
     cycleId: string;
@@ -37,9 +38,9 @@ export function QuickPayment({ cycleId, onSubmit, onCancel, isPending }: QuickPa
                     <button
                         onClick={handleSubmit}
                         disabled={isPending}
-                        className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 hover:bg-primary/90 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 hover:bg-primary/90 transition-colors"
                     >
-                        {isPending ? 'Saving...' : 'Save Payment'}
+                        {isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Payment'}
                     </button>
                     <button
                         onClick={onCancel}

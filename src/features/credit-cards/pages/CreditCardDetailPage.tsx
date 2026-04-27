@@ -19,15 +19,15 @@ export default function CreditCardDetailPage() {
     return <Navigate to="/cards" replace />;
   }
 
-  const handlePay = (cycle: string, amount: number) => {
+  const handlePay = async (cycle: string, amount: number) => {
     if (card) {
-      markPaid.mutate({ cardId: card.id, cycle, amount });
+      await markPaid.mutateAsync({ cardId: card.id, cycle, amount });
     }
   };
 
-  const handleRemove = (cycle: string) => {
+  const handleRemove = async (cycle: string) => {
     if (card) {
-      removePayment.mutate({ cardId: card.id, cycle });
+      await removePayment.mutateAsync({ cardId: card.id, cycle });
     }
   };
 
