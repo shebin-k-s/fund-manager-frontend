@@ -29,7 +29,7 @@ export function FundHeader({ name, recurrenceLabel, amount, fundId, isLoading }:
     return (
         <div className="page-header sticky top-0 z-20 bg-background flex items-center gap-3">
             <button
-                onClick={() => navigate('/funds')}
+                onClick={() => navigate(-1)}
                 className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
             >
                 <ArrowLeft className="w-4 h-4 text-secondary-foreground" />
@@ -40,7 +40,7 @@ export function FundHeader({ name, recurrenceLabel, amount, fundId, isLoading }:
                     {recurrenceLabel} · ₹{amount.toLocaleString('en-IN')}
                 </p>
             </div>
-            
+
             <button
                 onClick={() => exportStatementToPdf('fund-statement-container', `${name}_Statement`)}
                 className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
