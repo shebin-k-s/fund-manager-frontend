@@ -45,7 +45,7 @@ export default function CreditCardsPage() {
         </div>
 
         {/* Error Message */}
-        <div className="px-4 pt-8 pb-28">
+        <div className="px-4 mt-4" style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}>
           <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-6 h-6 text-destructive" />
@@ -118,7 +118,7 @@ export default function CreditCardsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="px-4 pb-28 mt-4">
+      <div className="px-4 pt-8" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}>
         {isLoading ? (
           <CardListSkeleton />
         ) : cards.length === 0 ? (
@@ -165,7 +165,7 @@ export default function CreditCardsPage() {
         )}
       </div>
 
-    
+
     </div>
   );
 }
