@@ -3,7 +3,6 @@ import { useDeleteCard, useMarkCardPaid, useRemoveCardPayment, useCardById } fro
 import { CardHeader } from '../components/CrediCardDetail/CardHeader';
 import { CardVisual } from '../components/CrediCardDetail/CardVisual';
 import { CardPaymentStatus } from '../components/CrediCardDetail/BillingSummary';
-import { DeleteSection } from '../components/CrediCardDetail/DeleteSection';
 import { CardStatementDocument } from '@/features/statements/components/CardStatementDocument';
 
 export default function CreditCardDetailPage() {
@@ -11,7 +10,6 @@ export default function CreditCardDetailPage() {
   const navigate = useNavigate();
 
   const { data: card, isLoading } = useCardById(id!);
-  const deleteCard = useDeleteCard();
   const markPaid = useMarkCardPaid();
   const removePayment = useRemoveCardPayment();
 
@@ -31,17 +29,7 @@ export default function CreditCardDetailPage() {
     }
   };
 
-  const handleDelete = () => {
-    if (card) {
-      deleteCard.mutate(card.id, {
-        onSuccess: () => navigate('/cards'),
-      });
-    }
-  };
-
-
-
-  const isPending = markPaid.isPending || removePayment.isPending || deleteCard.isPending;
+  const isPending = markPaid.isPending || removePayment.isPending;
 
   if (isLoading) {
     return (
@@ -84,12 +72,12 @@ export default function CreditCardDetailPage() {
               isPending={isPending}
             />
 
-            <DeleteSection onDelete={handleDelete} isPending={deleteCard.isPending} />
-            
             <CardStatementDocument card={card} />
           </>
         )}
       </div>
+
+      {card && <CardStatementDocument card={card} />}
     </div>
   );
 }

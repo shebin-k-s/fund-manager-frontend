@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, CalendarIcon } from 'lucide-react';
-import { useCardById, useUpdateCard } from '../hooks/useCreditCards';
+import { useCardById, useUpdateCard, useDeleteCard } from '../hooks/useCreditCards';
+import { DeleteSection } from '../components/CrediCardDetail/DeleteSection';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,6 +15,7 @@ export default function EditCreditCardPage() {
 
   const { data: card, isLoading } = useCardById(id ?? '');
   const updateCardMut = useUpdateCard();
+  const deleteCardMut = useDeleteCard();
 
   const [name, setName] = useState('');
   const [lastFour, setLastFour] = useState('');
@@ -63,6 +65,14 @@ export default function EditCreditCardPage() {
         onSuccess: () => navigate(`/cards/${card.id}`),
       }
     );
+  };
+
+  const handleDelete = () => {
+    if (card) {
+      deleteCardMut.mutate(card.id, {
+        onSuccess: () => navigate('/cards'),
+      });
+    }
   };
 
   return (
@@ -161,6 +171,8 @@ export default function EditCreditCardPage() {
         >
           {updateCardMut.isPending ? 'Saving...' : 'Save Changes'}
         </button>
+
+        <DeleteSection onDelete={handleDelete} isPending={deleteCardMut.isPending} />
       </div>
     </div>
   );

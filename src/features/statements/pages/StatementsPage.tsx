@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useFundsQuery } from '@/features/funds/hooks/useFunds';
 import { useCardsQuery } from '@/features/credit-cards/hooks/useCreditCards';
 import { getFundPaymentDates, isDatePaid, getPaidAmount } from '@/features/funds/utils/fundDateUtils';
@@ -11,16 +12,63 @@ import { FileText, Filter, Calendar as CalendarIcon, CheckCircle2, AlertCircle, 
 import { cn } from '@/lib/utils';
 
 export default function StatementsPage() {
+    const navigate = useNavigate();
     const { data: funds = [] } = useFundsQuery();
     const { data: cards = [] } = useCardsQuery();
 
     const [viewMode, setViewMode] = useState<'month' | 'entity'>('month');
+    const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
+    const [slideKey, setSlideKey] = useState(0);
+
+    const touchStartX = useRef<number | null>(null);
+    const touchStartY = useRef<number | null>(null);
+    const scrollCooldown = useRef(false);
+
+    const switchToEntity = useCallback(() => {
+        if (viewMode === 'entity') return;
+        setSlideDirection('left');
+        setSlideKey(k => k + 1);
+        setViewMode('entity');
+    }, [viewMode]);
+
+    const switchToMonth = useCallback(() => {
+        if (viewMode === 'month') return;
+        setSlideDirection('right');
+        setSlideKey(k => k + 1);
+        setViewMode('month');
+    }, [viewMode]);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    }, []);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (touchStartX.current === null || touchStartY.current === null) return;
+        const deltaX = touchStartX.current - e.changedTouches[0].clientX;
+        const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+            if (deltaX > 0) switchToEntity(); else switchToMonth();
+        }
+        touchStartX.current = null;
+        touchStartY.current = null;
+    }, [switchToEntity, switchToMonth]);
+
+    const handleWheel = useCallback((e: React.WheelEvent) => {
+        if (scrollCooldown.current) return;
+        if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+            scrollCooldown.current = true;
+            if (e.deltaX > 0) switchToEntity(); else switchToMonth();
+            setTimeout(() => { scrollCooldown.current = false; }, 500);
+        }
+    }, [switchToEntity, switchToMonth]);
     
     // Sub-filters
     const [subType, setSubType] = useState<'all' | 'fund' | 'card'>('all');
     
     // Scopes
     const [activeMonthKey, setActiveMonthKey] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM'));
+    const [isMonthSelectorOpen, setIsMonthSelectorOpen] = useState(false);
     const [activeEntityId, setActiveEntityId] = useState<string>('');
     const [isEntityDropdownOpen, setIsEntityDropdownOpen] = useState(false);
 
@@ -68,7 +116,7 @@ export default function StatementsPage() {
             validDates.forEach(date => {
                 const isPaid = isDatePaid(fund, date);
                 rows.push({
-                    id: `fund-${fund.id}-${date.getTime()}`, type: 'fund', name: fund.name, dueDate: date, isPaid,
+                    id: `fund-${fund.id}-${date.getTime()}`, entityId: fund.id, type: 'fund', name: fund.name, dueDate: date, isPaid,
                     amount: isPaid ? Number(getPaidAmount(fund, date) || fund.amount) : Number(fund.amount)
                 });
             });
@@ -85,7 +133,7 @@ export default function StatementsPage() {
                 const dateLabel = `${format(prevBillDate, 'dd MMM')} to ${format(c.billDate, 'dd MMM yy')} (Due ${format(c.dueDate, 'dd MMM')})`;
 
                 rows.push({
-                    id: `card-${card.id}-${c.cycle}`, type: 'card', name: card.name, dueDate: c.dueDate, isPaid: c.isPaid,
+                    id: `card-${card.id}-${c.cycle}`, entityId: card.id, type: 'card', name: card.name, dueDate: c.dueDate, isPaid: c.isPaid,
                     amount: c.isPaid ? Number(c.paidAmount !== undefined ? c.paidAmount : 0) : Number(c.paidAmount || 0),
                     dateLabel
                 });
@@ -127,7 +175,12 @@ export default function StatementsPage() {
     };
 
     return (
-        <div className="animate-fade-in bg-background min-h-full">
+        <div 
+            className="animate-fade-in bg-background min-h-full overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onWheel={handleWheel}
+        >
 
             {/* ── Header: filters — sticky, never scrolls away ── */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-white/5 pt-5 pb-4 px-4">
@@ -148,134 +201,177 @@ export default function StatementsPage() {
                 <div className="max-w-lg mx-auto mt-4 flex flex-col gap-3">
                     {/* View Mode Toggle */}
                     <div className="flex bg-[#111] rounded-xl border border-white/5 p-1">
-                        <button onClick={() => setViewMode('month')} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'month' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Month View</button>
-                        <button onClick={() => setViewMode('entity')} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'entity' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Entity View</button>
+                        <button onClick={switchToMonth} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'month' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Month View</button>
+                        <button onClick={switchToEntity} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'entity' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Entity View</button>
                     </div>
-
-                    {/* Sub-filter chips — month mode only */}
-                    {viewMode !== 'entity' && (
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setSubType('all')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'all' ? "bg-white text-black" : "border border-white/10 text-gray-400 hover:text-white")}>All</button>
-                            <button onClick={() => setSubType('fund')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'fund' ? "bg-blue-500 text-white" : "border border-white/10 text-gray-400 hover:text-white")}>Funds</button>
-                            <button onClick={() => setSubType('card')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'card' ? "bg-purple-500 text-white" : "border border-white/10 text-gray-400 hover:text-white")}>Cards</button>
-                        </div>
-                    )}
-
-                    {/* Contextual Nav Row: Primary filter dependent on mode */}
-                    <div>
-                        {viewMode === 'month' ? (
-                            <div className="flex flex-col gap-2">
-                                {/* Year Selector */}
-                                <div className="w-full overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                    <div className="flex items-center gap-1.5 px-0.5 w-max">
-                                        {yearOptions.map(y => (
-                                            <button 
-                                                key={y} 
-                                                onClick={() => setActiveMonthKey(`${y}-${activeMonthStr}`)}
-                                                className={cn("px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0", activeYearStr === y.toString() ? "bg-white/10 text-white border border-white/20" : "bg-transparent text-gray-500 hover:text-white")}
-                                            >
-                                                {y}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                
-                                {/* Month Selector */}
-                                <div className="w-full overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                    <div className="flex items-center gap-2 px-1 w-max">
-                                        {monthOptionsList.map(m => {
-                                            const monthStr = m.toString().padStart(2, '0');
-                                            const monthLabel = format(new Date(2024, m - 1, 1), 'MMM'); // 'Jan', 'Feb'
-                                            return (
-                                                <button 
-                                                    key={m} 
-                                                    onClick={() => setActiveMonthKey(`${activeYearStr}-${monthStr}`)}
-                                                    className={cn("px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0", activeMonthStr === monthStr ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-[#111] border border-white/5 text-gray-400 hover:bg-white/5 hover:text-white")}
-                                                >
-                                                    {monthLabel}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="relative">
-                                {/* Custom Dropdown Trigger */}
-                                <button 
-                                    onClick={() => setIsEntityDropdownOpen(!isEntityDropdownOpen)}
-                                    className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#111] py-3.5 pl-4 pr-4 transition-all hover:bg-white/5 focus:border-emerald-500/50 shadow-sm"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Filter className="w-5 h-5 text-emerald-500" />
-                                        <span className={cn("text-sm font-semibold tracking-wide", activeEntityId ? "text-white" : "text-gray-400")}>
-                                            {activeEntityId 
-                                                ? (entityOptions.find(e => e.id === activeEntityId)?.name || 'Select Entity') 
-                                                : "Select Entity"}
-                                        </span>
-                                    </div>
-                                    <ChevronDown className={cn("w-4 h-4 text-gray-500 transition-transform duration-300", isEntityDropdownOpen && "rotate-180")} />
-                                </button>
-
-                                {/* Custom Dropdown Menu Overlay */}
-                                {isEntityDropdownOpen && (
-                                    <>
-                                        {/* Invisible backdrop to dismiss click outside */}
-                                        <div className="fixed inset-0 z-40" onClick={() => setIsEntityDropdownOpen(false)} />
-                                        
-                                        <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-2 max-h-72 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-in fade-in zoom-in transition-all">
-                                            {entityOptions.length === 0 && <p className="px-5 py-3 text-sm text-gray-500">No targets found.</p>}
-                                            
-                                            {/* Funds Group */}
-                                            {entityOptions.filter(e => e.type === 'fund').length > 0 && (
-                                                <div className="mb-2">
-                                                    <div className="px-5 py-2 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">Funds</div>
-                                                    {entityOptions.filter(e => e.type === 'fund').map(e => (
-                                                        <button
-                                                            key={e.id}
-                                                            onClick={() => { setActiveEntityId(e.id); setIsEntityDropdownOpen(false); }}
-                                                            className={cn("w-full text-left px-5 py-3 text-sm font-semibold transition-colors hover:bg-emerald-500/10 flex items-center gap-3", activeEntityId === e.id ? "text-emerald-400 bg-emerald-500/5" : "text-white")}
-                                                        >
-                                                            <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                                                            {e.name}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {/* Divider */}
-                                            {entityOptions.filter(e => e.type === 'card').length > 0 && entityOptions.filter(e => e.type === 'fund').length > 0 && (
-                                                <div className="h-px bg-white/10 mx-5 my-1" />
-                                            )}
-
-                                            {/* Cards Group */}
-                                            {entityOptions.filter(e => e.type === 'card').length > 0 && (
-                                                <div className="mt-2">
-                                                    <div className="px-5 py-2 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">Credit Cards</div>
-                                                    {entityOptions.filter(e => e.type === 'card').map(e => (
-                                                        <button
-                                                            key={e.id}
-                                                            onClick={() => { setActiveEntityId(e.id); setIsEntityDropdownOpen(false); }}
-                                                            className={cn("w-full text-left px-5 py-3 text-sm font-semibold transition-colors hover:bg-emerald-500/10 flex items-center gap-3", activeEntityId === e.id ? "text-emerald-400 bg-emerald-500/5" : "text-white")}
-                                                        >
-                                                            <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
-                                                            {e.name}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
-                                )}
+                    <div 
+                        key={slideKey} 
+                        className={cn(
+                            "flex flex-col gap-3 animate-in fade-in duration-300 fill-mode-both",
+                            slideDirection === 'left' ? "slide-in-from-right-8" : "slide-in-from-left-8"
+                        )}
+                    >
+                        {/* Sub-filter chips — month mode only */}
+                        {viewMode !== 'entity' && (
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setSubType('all')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'all' ? "bg-white text-black" : "border border-white/10 text-gray-400 hover:text-white")}>All</button>
+                                <button onClick={() => setSubType('fund')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'fund' ? "bg-blue-500 text-white" : "border border-white/10 text-gray-400 hover:text-white")}>Funds</button>
+                                <button onClick={() => setSubType('card')} className={cn("px-4 py-1.5 text-xs font-semibold rounded-full transition-all shrink-0", subType === 'card' ? "bg-purple-500 text-white" : "border border-white/10 text-gray-400 hover:text-white")}>Cards</button>
                             </div>
                         )}
-                    </div>
 
+                        {/* Contextual Nav Row: Primary filter dependent on mode */}
+                        <div>
+                            {viewMode === 'month' ? (
+                                <div className="flex flex-col gap-2">
+                                    {/* Month Dropdown Trigger */}
+                                    <button 
+                                        onClick={() => setIsMonthSelectorOpen(!isMonthSelectorOpen)}
+                                        className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#111] py-3.5 pl-4 pr-4 transition-all hover:bg-white/5 focus:border-emerald-500/50 shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <CalendarIcon className="w-5 h-5 text-emerald-500" />
+                                            <span className="text-sm font-semibold tracking-wide text-white">
+                                                {format(activeMonthStart, 'MMMM yyyy')}
+                                            </span>
+                                        </div>
+                                        <ChevronDown className={cn("w-4 h-4 text-gray-500 transition-transform duration-300", isMonthSelectorOpen && "rotate-180")} />
+                                    </button>
+
+                                    <div className={cn(
+                                        "grid transition-all duration-300 ease-in-out",
+                                        isMonthSelectorOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                                    )}>
+                                        <div className="overflow-hidden">
+                                            <div className="flex flex-col gap-2 bg-[#111] rounded-xl border border-white/5 p-3 mt-2">
+                                                {/* Year Selector */}
+                                                <div 
+                                                    className="w-full overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                                    onTouchStart={e => e.stopPropagation()}
+                                                    onWheel={e => e.stopPropagation()}
+                                                >
+                                                    <div className="flex items-center gap-1.5 px-0.5 w-max">
+                                                        {yearOptions.map(y => (
+                                                            <button 
+                                                                key={y} 
+                                                                onClick={() => setActiveMonthKey(`${y}-${activeMonthStr}`)}
+                                                                className={cn("px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0", activeYearStr === y.toString() ? "bg-white/10 text-white border border-white/20" : "bg-transparent text-gray-500 hover:text-white")}
+                                                            >
+                                                                {y}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Month Selector */}
+                                                <div 
+                                                    className="w-full overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                                    onTouchStart={e => e.stopPropagation()}
+                                                    onWheel={e => e.stopPropagation()}
+                                                >
+                                                    <div className="flex items-center gap-2 px-1 w-max">
+                                                        {monthOptionsList.map(m => {
+                                                            const monthStr = m.toString().padStart(2, '0');
+                                                            const monthLabel = format(new Date(2024, m - 1, 1), 'MMM'); // 'Jan', 'Feb'
+                                                            return (
+                                                                <button 
+                                                                    key={m} 
+                                                                    onClick={() => setActiveMonthKey(`${activeYearStr}-${monthStr}`)}
+                                                                    className={cn("px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0", activeMonthStr === monthStr ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-[#141414] border border-white/5 text-gray-400 hover:bg-white/5 hover:text-white")}
+                                                                >
+                                                                    {monthLabel}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    {/* Custom Dropdown Trigger */}
+                                    <button 
+                                        onClick={() => setIsEntityDropdownOpen(!isEntityDropdownOpen)}
+                                        className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#111] py-3.5 pl-4 pr-4 transition-all hover:bg-white/5 focus:border-emerald-500/50 shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Filter className="w-5 h-5 text-emerald-500" />
+                                            <span className={cn("text-sm font-semibold tracking-wide", activeEntityId ? "text-white" : "text-gray-400")}>
+                                                {activeEntityId 
+                                                    ? (entityOptions.find(e => e.id === activeEntityId)?.name || 'Select Entity') 
+                                                    : "Select Entity"}
+                                            </span>
+                                        </div>
+                                        <ChevronDown className={cn("w-4 h-4 text-gray-500 transition-transform duration-300", isEntityDropdownOpen && "rotate-180")} />
+                                    </button>
+
+                                    {/* Custom Dropdown Menu Overlay */}
+                                    {isEntityDropdownOpen && (
+                                        <>
+                                            {/* Invisible backdrop to dismiss click outside */}
+                                            <div className="fixed inset-0 z-40" onClick={() => setIsEntityDropdownOpen(false)} />
+                                            
+                                            <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-2 max-h-72 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-in fade-in zoom-in transition-all">
+                                                {entityOptions.length === 0 && <p className="px-5 py-3 text-sm text-gray-500">No targets found.</p>}
+                                                
+                                                {/* Funds Group */}
+                                                {entityOptions.filter(e => e.type === 'fund').length > 0 && (
+                                                    <div className="mb-2">
+                                                        <div className="px-5 py-2 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">Funds</div>
+                                                        {entityOptions.filter(e => e.type === 'fund').map(e => (
+                                                            <button
+                                                                key={e.id}
+                                                                onClick={() => { setActiveEntityId(e.id); setIsEntityDropdownOpen(false); }}
+                                                                className={cn("w-full text-left px-5 py-3 text-sm font-semibold transition-colors hover:bg-emerald-500/10 flex items-center gap-3", activeEntityId === e.id ? "text-emerald-400 bg-emerald-500/5" : "text-white")}
+                                                            >
+                                                                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                                                                {e.name}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* Divider */}
+                                                {entityOptions.filter(e => e.type === 'card').length > 0 && entityOptions.filter(e => e.type === 'fund').length > 0 && (
+                                                    <div className="h-px bg-white/10 mx-5 my-1" />
+                                                )}
+
+                                                {/* Cards Group */}
+                                                {entityOptions.filter(e => e.type === 'card').length > 0 && (
+                                                    <div className="mt-2">
+                                                        <div className="px-5 py-2 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">Credit Cards</div>
+                                                        {entityOptions.filter(e => e.type === 'card').map(e => (
+                                                            <button
+                                                                key={e.id}
+                                                                onClick={() => { setActiveEntityId(e.id); setIsEntityDropdownOpen(false); }}
+                                                                className={cn("w-full text-left px-5 py-3 text-sm font-semibold transition-colors hover:bg-emerald-500/10 flex items-center gap-3", activeEntityId === e.id ? "text-emerald-400 bg-emerald-500/5" : "text-white")}
+                                                            >
+                                                                <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
+                                                                {e.name}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* ── Body: metrics + natural-scroll list ── */}
-            <div className="w-full max-w-lg mx-auto px-4 pt-4">
+            <div 
+                key={`${slideKey}-body`}
+                className={cn(
+                    "w-full max-w-lg mx-auto px-4 pt-4 animate-in fade-in duration-300 fill-mode-both",
+                    slideDirection === 'left' ? "slide-in-from-right-8" : "slide-in-from-left-8"
+                )}
+            >
 
                 {/* Summary metrics — always visible */}
                 <div className="shrink-0 grid grid-cols-3 gap-2 pb-3">
@@ -303,7 +399,9 @@ export default function StatementsPage() {
                 ) : (
                     <div className="space-y-2 pb-28">
                             {finalRows.map(row => (
-                                <div key={row.id} className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a]">
+                                <div key={row.id} 
+                                     onClick={() => navigate(`/${row.type === 'fund' ? 'funds' : 'cards'}/${row.entityId}`)}
+                                     className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a] cursor-pointer active:scale-[0.98]">
                                     <div className="flex items-start gap-3">
                                         <div className="mt-1">
                                             {row.isPaid ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : 

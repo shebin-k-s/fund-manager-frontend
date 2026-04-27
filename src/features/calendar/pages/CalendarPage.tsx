@@ -4,11 +4,13 @@ import { getFundPaymentDates, dateKey, isDatePaid } from '@/features/funds/utils
 import { getBillingCycles } from '@/features/credit-cards/utils/cardDateUtils';
 import { Calendar } from '@/components/ui/calendar';
 import { useState, useMemo, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { addMonths, subMonths, startOfDay, format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Landmark, CreditCard, CheckCircle2, Clock, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CalendarPage() {
+    const navigate = useNavigate();
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [slideKey, setSlideKey] = useState(0);
@@ -91,54 +93,61 @@ export default function CalendarPage() {
         const k = props.date ? dateKey(props.date) : '';
         const markers = dueMap[k];
         const today = isToday(props.date);
+        const isPast = props.date < startOfDay(new Date());
 
         if (!markers || markers.length === 0) {
             return (
-                <div className="flex flex-col items-center justify-center w-full h-full relative">
-                    <span className={cn(
-                        "text-sm",
-                        today ? "font-bold text-white" : "text-white/60"
-                    )}>
-                        {props.date.getDate()}
-                    </span>
-                    {today && (
-                        <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white/70" />
-                    )}
+                <div className={cn(
+                    "flex flex-col items-center w-full h-full relative pt-1",
+                    today ? "font-bold text-white" : "text-white/50"
+                )}>
+                    <span className="text-[13px]">{props.date.getDate()}</span>
+                    {today && <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-white/70" />}
                 </div>
             );
         }
 
         const allPaid = markers.every(m => m.isPaid);
-        const hasPendingFund = markers.some(m => !m.isPaid && m.type === 'fund');
-        const hasPendingCard = markers.some(m => !m.isPaid && m.type === 'card');
+        const hasOverdue = markers.some(m => !m.isPaid) && isPast;
+        
+        const pendingFunds = markers.filter(m => m.type === 'fund' && !m.isPaid).length;
+        const pendingCards = markers.filter(m => m.type === 'card' && !m.isPaid).length;
 
         return (
-            <div className="flex flex-col items-center justify-center w-full h-full relative">
-                {/* Paid day backdrop */}
-                {allPaid && (
-                    <div className="absolute inset-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/25 pointer-events-none" />
-                )}
-                <span className={cn(
-                    "font-bold z-10 text-sm leading-none",
-                    allPaid ? "text-emerald-300" : "text-white"
+            <div className="flex flex-col items-center justify-center w-full h-full relative p-[2px]">
+                <div className={cn(
+                    "w-full h-full rounded-lg flex flex-col items-center pt-0.5 relative overflow-hidden transition-all",
+                    allPaid ? "bg-emerald-500/10 border border-emerald-500/20" :
+                    hasOverdue ? "bg-red-500/10 border border-red-500/20" :
+                    "bg-blue-500/10 border border-blue-500/20"
                 )}>
-                    {props.date.getDate()}
-                </span>
-                {/* Today indicator — sits above the payment dots */}
-                {today && (
-                    <span className="absolute top-1 right-1 w-1 h-1 rounded-full bg-white/60 z-20" />
-                )}
-                {/* Payment dots row */}
-                <div className="flex gap-0.5 absolute bottom-1 z-10">
-                    {hasPendingFund && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.9)]" />
+                    <span className={cn(
+                        "text-[13px] font-bold z-10",
+                        allPaid ? "text-emerald-400" :
+                        hasOverdue ? "text-red-400" :
+                        "text-blue-400"
+                    )}>
+                        {props.date.getDate()}
+                    </span>
+
+                    {today && (
+                        <span className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-white z-20 shadow-[0_0_5px_white]" />
                     )}
-                    {hasPendingCard && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.9)]" />
-                    )}
-                    {allPaid && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.9)]" />
-                    )}
+
+                    <div className="flex gap-1 absolute bottom-1 z-10">
+                        {allPaid ? (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]" />
+                        ) : (
+                            <>
+                                {pendingFunds > 0 && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.9)]" />
+                                )}
+                                {pendingCards > 0 && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.9)]" />
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -217,7 +226,7 @@ export default function CalendarPage() {
                                     head_row: "flex mb-1",
                                     head_cell: "flex-1 text-center text-[10px] font-bold uppercase tracking-widest text-white/30 py-2",
                                     row: "flex w-full",
-                                    cell: "flex-1 aspect-square p-0.5 relative",
+                                    cell: "flex-1 h-11 sm:h-12 p-0.5 relative",
                                     day: "w-full h-full rounded-xl text-sm font-medium transition-all duration-200 hover:bg-white/5 aria-selected:bg-blue-600/30 aria-selected:border aria-selected:border-blue-500/50 aria-selected:text-white",
                                     day_today: "",
                                     day_outside: "opacity-20",
@@ -233,7 +242,7 @@ export default function CalendarPage() {
                     </div>
 
                     {/* Legend strip */}
-                    <div className="bg-[#0a0a0a] border-t border-white/[0.06] px-4 py-2.5 flex items-center justify-center gap-5">
+                    <div className="bg-[#0a0a0a] border-t border-white/[0.06] px-2 py-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                         <div className="flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.9)]" />
                             <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Fund</span>
@@ -243,8 +252,16 @@ export default function CalendarPage() {
                             <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Card</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.9)]" />
+                            <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                                <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                            </div>
                             <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Paid</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded bg-red-500/20 border border-red-500/40 flex items-center justify-center">
+                                <span className="w-1 h-1 rounded-full bg-red-500" />
+                            </div>
+                            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Missed</span>
                         </div>
                     </div>
                 </div>
@@ -288,10 +305,11 @@ export default function CalendarPage() {
                                 return (
                                     <div
                                         key={i}
+                                        onClick={() => navigate(`/${isFund ? 'funds' : 'cards'}/${data.id}`)}
                                         className={cn(
-                                            "flex items-center gap-4 p-4 rounded-2xl border transition-all",
+                                            "flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer",
                                             "bg-white/[0.03] border-white/[0.06]",
-                                            "hover:bg-white/[0.06] hover:border-white/10"
+                                            "hover:bg-white/[0.06] hover:border-white/10 active:scale-[0.98]"
                                         )}
                                     >
                                         {/* Icon */}
