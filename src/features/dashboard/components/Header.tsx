@@ -11,7 +11,7 @@ import {
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useServerStatus, ServerStatus } from '@/hooks/useServerStatus';
+
 import { useNotifications } from '@/hooks/useNotifications';
 import { exportStatementToPdf } from '@/features/statements/utils/exportToPdf';
 import { cn } from '@/lib/utils';
@@ -40,50 +40,7 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
         };
     }, [showLogoutConfirm]);
 
-    const { serverStatus } = useServerStatus();
-    const { permission, requestPermission, triggerPush } = useNotifications();
 
-    const notificationsGranted = permission === 'granted';
-
-    const statusConfig: Record<
-        ServerStatus,
-        {
-            icon: React.ElementType;
-            color: string;
-            bg: string;
-            dot: string;
-            label: string;
-            animation: string;
-        }
-    > = {
-        live: {
-            icon: Activity,
-            color: 'text-emerald-400',
-            bg: 'bg-emerald-500/10 border-emerald-500/20',
-            dot: 'bg-emerald-400',
-            label: 'Live',
-            animation: 'animate-pulse',
-        },
-        waking: {
-            icon: Loader2,
-            color: 'text-amber-400',
-            bg: 'bg-amber-500/10 border-amber-500/20',
-            dot: 'bg-amber-400',
-            label: 'Waking up',
-            animation: 'animate-spin',
-        },
-        error: {
-            icon: AlertCircle,
-            color: 'text-red-400',
-            bg: 'bg-red-500/10 border-red-500/20',
-            dot: 'bg-red-400',
-            label: 'Server error',
-            animation: '',
-        },
-    };
-
-    const { icon: StatusIcon, color, bg, dot, label, animation } =
-        statusConfig[serverStatus];
 
     // 🔥 unified bell behavior
     const handleBellClick = async () => {
@@ -122,27 +79,7 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
                     {/* Right controls */}
                     <div className="flex items-center gap-2 shrink-0">
 
-                        {/* Server status */}
-                        <div
-                            className={cn(
-                                'flex items-center gap-1.5 p-1.5 sm:pl-2 sm:pr-3 sm:py-1.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider',
-                                bg,
-                                color
-                            )}
-                            title={label}
-                        >
-                            <span
-                                className={cn(
-                                    'w-1.5 h-1.5 rounded-full shrink-0',
-                                    dot,
-                                    serverStatus === 'live' && 'animate-pulse'
-                                )}
-                            />
-                            <StatusIcon
-                                className={cn('w-3 h-3 shrink-0', animation)}
-                            />
-                            <span className="hidden sm:inline">{label}</span>
-                        </div>
+
 
                         {/* 🔔 Bell (single unified control) */}
                         <button
