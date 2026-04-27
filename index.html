@@ -15,174 +15,21 @@
   <link rel="apple-touch-icon" href="/logo.png">
   <meta name="theme-color" content="#0a0a0a">
 
-  <!-- Preload Outfit font to avoid FOUT on splash -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-
   <style>
-    /* ── Reset ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html, body { height: 100%; overflow: hidden; }
-
     body {
+      /* Match the OS splash background exactly so there's no flash */
       background-color: #0a0a0a;
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── Splash screen ──────────────────────────────── */
-    #splash {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #0a0a0a;
-      /* Subtle radial glow matching app's purple primary */
-      background-image:
-        radial-gradient(ellipse 60% 50% at 50% 60%, hsla(262, 80%, 50%, 0.08) 0%, transparent 70%);
-      gap: 0;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-
-    #splash.hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(1.03);
-    }
-
-    /* ── Logo wrapper ───────────────────────────────── */
-    .splash-logo-wrap {
-      position: relative;
-      width: 88px;
-      height: 88px;
-      margin-bottom: 24px;
-    }
-
-    /* Glow ring behind logo */
-    .splash-logo-wrap::before {
-      content: '';
-      position: absolute;
-      inset: -12px;
-      border-radius: 50%;
-      background: radial-gradient(circle, hsla(262, 80%, 50%, 0.22) 0%, transparent 70%);
-      animation: pulse-glow 2.4s ease-in-out infinite;
-    }
-
-    .splash-logo {
-      width: 88px;
-      height: 88px;
-      border-radius: 22px;
-      object-fit: contain;
-      position: relative;
-      z-index: 1;
-      box-shadow:
-        0 0 0 1px hsla(262, 80%, 50%, 0.18),
-        0 8px 32px hsla(262, 80%, 50%, 0.22),
-        0 2px 8px rgba(0,0,0,0.6);
-      animation: logo-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-
-    /* ── App name ───────────────────────────────────── */
-    .splash-name {
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: #ffffff;
-      margin-bottom: 6px;
-      animation: text-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-    }
-
-    .splash-tagline {
-      font-size: 13px;
-      font-weight: 400;
-      color: rgba(255, 255, 255, 0.35);
-      letter-spacing: 0.3px;
-      animation: text-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
-      margin-bottom: 48px;
-    }
-
-    /* ── Loading indicator ──────────────────────────── */
-    .splash-loader {
-      width: 120px;
-      height: 3px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 99px;
-      overflow: hidden;
-      animation: text-in 0.4s ease 0.3s both;
-    }
-
-    .splash-loader-bar {
-      height: 100%;
-      width: 40%;
-      border-radius: 99px;
-      background: linear-gradient(90deg, hsla(262,80%,50%,0.5), hsl(262,80%,60%), hsla(262,80%,50%,0.5));
-      animation: loader-slide 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    /* ── Keyframes ──────────────────────────────────── */
-    @keyframes logo-in {
-      from { opacity: 0; transform: translateY(12px) scale(0.9); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    @keyframes text-in {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes loader-slide {
-      0%   { transform: translateX(-150%); }
-      100% { transform: translateX(380%); }
-    }
-
-    @keyframes pulse-glow {
-      0%, 100% { opacity: 0.6; transform: scale(1); }
-      50%       { opacity: 1;   transform: scale(1.08); }
     }
   </style>
 </head>
 
 <body>
-  <!-- ── PWA Splash Screen ── shown immediately, hidden once React mounts ── -->
-  <div id="splash" aria-hidden="true">
-    <div class="splash-logo-wrap">
-      <img class="splash-logo" src="/logo.png" alt="Velo" />
-    </div>
-    <p class="splash-name">Velo</p>
-    <p class="splash-tagline">Cards &amp; Funds, simplified</p>
-    <div class="splash-loader">
-      <div class="splash-loader-bar"></div>
-    </div>
-  </div>
-
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
-
-  <!-- Hide splash as soon as React is ready -->
-  <script>
-    (function () {
-      var splash = document.getElementById('splash');
-      function hideSplash() {
-        if (!splash) return;
-        splash.classList.add('hidden');
-        setTimeout(function () { splash.remove(); }, 400);
-      }
-      // React signals readiness via DOMContentLoaded + a small grace period
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
-          setTimeout(hideSplash, 600);
-        });
-      } else {
-        setTimeout(hideSplash, 600);
-      }
-    })();
-  </script>
 </body>
 
 </html>
