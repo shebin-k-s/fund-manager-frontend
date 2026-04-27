@@ -40,7 +40,8 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
         };
     }, [showLogoutConfirm]);
 
-
+    const { permission, requestPermission, triggerPush } = useNotifications();
+    const notificationsGranted = permission === 'granted';
 
     // 🔥 unified bell behavior
     const handleBellClick = async () => {
