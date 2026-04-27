@@ -23,19 +23,23 @@ export default defineConfig(({ mode }) => ({
       srcDir: 'public',
       filename: 'sw.js',
       devOptions: {
-        enabled: true
+        enabled: true,
+        type: 'module'
       },
       injectManifest: {
-        injectionPoint: undefined, // 👈 don't inject precache if not needed
+        injectionPoint: undefined, // We manage caching in sw.js manually
       },
       includeAssets: ['favicon.ico', 'logo.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Velo',
         short_name: 'Velo',
         description: 'Manage Credit Cards & Recurring Deposits',
-        theme_color: '#ffffff',
+        theme_color: '#065f46',
+        background_color: '#0a0a0a',
         display: 'standalone',
+        orientation: 'portrait',
         start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'logo.png',
@@ -45,7 +49,8 @@ export default defineConfig(({ mode }) => ({
           {
             src: 'logo.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
