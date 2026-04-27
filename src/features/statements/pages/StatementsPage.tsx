@@ -62,10 +62,10 @@ export default function StatementsPage() {
             setTimeout(() => { scrollCooldown.current = false; }, 500);
         }
     }, [switchToEntity, switchToMonth]);
-    
+
     // Sub-filters
     const [subType, setSubType] = useState<'all' | 'fund' | 'card'>('all');
-    
+
     // Scopes
     const [activeMonthKey, setActiveMonthKey] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM'));
     const [isMonthSelectorOpen, setIsMonthSelectorOpen] = useState(false);
@@ -146,8 +146,8 @@ export default function StatementsPage() {
         } else if (viewMode === 'entity' && activeEntityId) {
             const [type, ...idParts] = activeEntityId.split('-');
             const rawId = idParts.join('-');
-            if (type === 'fund') { const f = funds.find(f => f.id === rawId); if(f) addFundRows(f); }
-            if (type === 'card') { const c = cards.find(c => c.id === rawId); if(c) addCardRows(c); }
+            if (type === 'fund') { const f = funds.find(f => f.id === rawId); if (f) addFundRows(f); }
+            if (type === 'card') { const c = cards.find(c => c.id === rawId); if (c) addCardRows(c); }
         }
 
         return rows.sort((a, b) => b.dueDate.getTime() - a.dueDate.getTime());
@@ -166,8 +166,8 @@ export default function StatementsPage() {
         return { paid, pending, overdue };
     }, [finalRows]);
 
-    const displayLabel = viewMode === 'month' ? format(activeMonthStart, 'MMMM yyyy') : 
-                         (entityOptions.find(e => e.id === activeEntityId)?.name || 'Entity Statement');
+    const displayLabel = viewMode === 'month' ? format(activeMonthStart, 'MMMM yyyy') :
+        (entityOptions.find(e => e.id === activeEntityId)?.name || 'Entity Statement');
 
     const handleExport = () => {
         const safeName = displayLabel.replace(/[^a-z0-9]/gi, '_');
@@ -175,7 +175,7 @@ export default function StatementsPage() {
     };
 
     return (
-        <div 
+        <div
             className="animate-fade-in bg-background absolute inset-0 flex flex-col overflow-hidden"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
@@ -204,8 +204,8 @@ export default function StatementsPage() {
                         <button onClick={switchToMonth} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'month' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Month View</button>
                         <button onClick={switchToEntity} className={cn("flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all", viewMode === 'entity' ? "bg-white/10 text-white" : "text-gray-500 hover:bg-white/5")}>Entity View</button>
                     </div>
-                    <div 
-                        key={slideKey} 
+                    <div
+                        key={slideKey}
                         className={cn(
                             "flex flex-col gap-3 animate-in fade-in duration-300 fill-mode-both",
                             slideDirection === 'left' ? "slide-in-from-right-8" : "slide-in-from-left-8"
@@ -225,7 +225,7 @@ export default function StatementsPage() {
                             {viewMode === 'month' ? (
                                 <div className="flex flex-col gap-2">
                                     {/* Month Dropdown Trigger */}
-                                    <button 
+                                    <button
                                         onClick={() => setIsMonthSelectorOpen(!isMonthSelectorOpen)}
                                         className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#111] py-3.5 pl-4 pr-4 transition-all hover:bg-white/5 focus:border-emerald-500/50 shadow-sm"
                                     >
@@ -245,15 +245,15 @@ export default function StatementsPage() {
                                         <div className="overflow-hidden">
                                             <div className="flex flex-col gap-2 bg-[#111] rounded-xl border border-white/5 p-3 mt-2">
                                                 {/* Year Selector */}
-                                                <div 
+                                                <div
                                                     className="w-full overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                                                     onTouchStart={e => e.stopPropagation()}
                                                     onWheel={e => e.stopPropagation()}
                                                 >
                                                     <div className="flex items-center gap-1.5 px-0.5 w-max">
                                                         {yearOptions.map(y => (
-                                                            <button 
-                                                                key={y} 
+                                                            <button
+                                                                key={y}
                                                                 onClick={() => setActiveMonthKey(`${y}-${activeMonthStr}`)}
                                                                 className={cn("px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0", activeYearStr === y.toString() ? "bg-white/10 text-white border border-white/20" : "bg-transparent text-gray-500 hover:text-white")}
                                                             >
@@ -262,9 +262,9 @@ export default function StatementsPage() {
                                                         ))}
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Month Selector */}
-                                                <div 
+                                                <div
                                                     className="w-full overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                                                     onTouchStart={e => e.stopPropagation()}
                                                     onWheel={e => e.stopPropagation()}
@@ -274,8 +274,8 @@ export default function StatementsPage() {
                                                             const monthStr = m.toString().padStart(2, '0');
                                                             const monthLabel = format(new Date(2024, m - 1, 1), 'MMM'); // 'Jan', 'Feb'
                                                             return (
-                                                                <button 
-                                                                    key={m} 
+                                                                <button
+                                                                    key={m}
                                                                     onClick={() => setActiveMonthKey(`${activeYearStr}-${monthStr}`)}
                                                                     className={cn("px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0", activeMonthStr === monthStr ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-[#141414] border border-white/5 text-gray-400 hover:bg-white/5 hover:text-white")}
                                                                 >
@@ -292,15 +292,15 @@ export default function StatementsPage() {
                             ) : (
                                 <div className="relative">
                                     {/* Custom Dropdown Trigger */}
-                                    <button 
+                                    <button
                                         onClick={() => setIsEntityDropdownOpen(!isEntityDropdownOpen)}
                                         className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-[#111] py-3.5 pl-4 pr-4 transition-all hover:bg-white/5 focus:border-emerald-500/50 shadow-sm"
                                     >
                                         <div className="flex items-center gap-3">
                                             <Filter className="w-5 h-5 text-emerald-500" />
                                             <span className={cn("text-sm font-semibold tracking-wide", activeEntityId ? "text-white" : "text-gray-400")}>
-                                                {activeEntityId 
-                                                    ? (entityOptions.find(e => e.id === activeEntityId)?.name || 'Select Entity') 
+                                                {activeEntityId
+                                                    ? (entityOptions.find(e => e.id === activeEntityId)?.name || 'Select Entity')
                                                     : "Select Entity"}
                                             </span>
                                         </div>
@@ -312,10 +312,10 @@ export default function StatementsPage() {
                                         <>
                                             {/* Invisible backdrop to dismiss click outside */}
                                             <div className="fixed inset-0 z-40" onClick={() => setIsEntityDropdownOpen(false)} />
-                                            
+
                                             <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-2 max-h-72 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden animate-in fade-in zoom-in transition-all">
                                                 {entityOptions.length === 0 && <p className="px-5 py-3 text-sm text-gray-500">No targets found.</p>}
-                                                
+
                                                 {/* Funds Group */}
                                                 {entityOptions.filter(e => e.type === 'fund').length > 0 && (
                                                     <div className="mb-2">
@@ -365,7 +365,7 @@ export default function StatementsPage() {
             </div>
 
             {/* ── Body: metrics + scrollable list ── */}
-            <div 
+            <div
                 key={`${slideKey}-body`}
                 className={cn(
                     "flex-1 flex flex-col min-h-0 w-full max-w-lg mx-auto px-4 pt-3 animate-in fade-in duration-300 fill-mode-both",
@@ -390,63 +390,65 @@ export default function StatementsPage() {
                 </div>
 
                 {/* List — solely scrolls within this container */}
-                <div className="flex-1 overflow-y-auto min-h-0 pb-28 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {finalRows.length === 0 ? (
-                        <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center mt-2">
-                            <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
-                            <p className="text-sm font-medium text-gray-300">No records found</p>
-                            <p className="text-xs text-gray-500 mt-1">Adjust filters to see history.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                                {finalRows.map(row => (
-                                    <div key={row.id} 
-                                         onClick={() => navigate(`/${row.type === 'fund' ? 'funds' : 'cards'}/${row.entityId}`)}
-                                         className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a] cursor-pointer active:scale-[0.98]">
-                                        <div className="flex items-start gap-3">
-                                            <div className="mt-1">
-                                                {row.isPaid ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : 
-                                                row.dueDate < new Date() ? <AlertCircle className="w-4 h-4 text-red-500" /> :
+                <div
+                    className="flex-1 overflow-y-auto min-h-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}
+                >                    {finalRows.length === 0 ? (
+                    <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center mt-2">
+                        <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
+                        <p className="text-sm font-medium text-gray-300">No records found</p>
+                        <p className="text-xs text-gray-500 mt-1">Adjust filters to see history.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {finalRows.map(row => (
+                            <div key={row.id}
+                                onClick={() => navigate(`/${row.type === 'fund' ? 'funds' : 'cards'}/${row.entityId}`)}
+                                className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a] cursor-pointer active:scale-[0.98]">
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-1">
+                                        {row.isPaid ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> :
+                                            row.dueDate < new Date() ? <AlertCircle className="w-4 h-4 text-red-500" /> :
                                                 <Clock className="w-4 h-4 text-blue-500" />}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold text-white leading-tight">{row.name}</p>
-                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mt-1">
-                                                    {row.dateLabel ? row.dateLabel : format(row.dueDate, 'dd MMM yy')} • {row.type}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right text-white">
-                                            {row.isPaid ? (
-                                                <span className="text-sm font-mono font-bold text-white">
-                                                    ₹{Number(row.amount).toLocaleString('en-IN')}
-                                                </span>
-                                            ) : row.type === 'card' ? (
-                                                <span className="text-sm font-mono font-semibold text-gray-500">
-                                                    TBA
-                                                </span>
-                                            ) : (
-                                                <span className="text-sm font-mono font-bold text-white">
-                                                    ₹{Number(row.amount).toLocaleString('en-IN')}
-                                                </span>
-                                            )}
-                                            <p className={cn("text-[9px] font-bold uppercase tracking-widest mt-1 text-right", 
-                                                row.isPaid ? "text-emerald-500" : row.dueDate < new Date() ? "text-red-500" : "text-blue-500"
-                                            )}>
-                                                {row.isPaid ? 'PAID' : row.dueDate < new Date() ? 'OVERDUE' : 'PENDING'}
-                                            </p>
-                                        </div>
                                     </div>
-                                ))}
-                        </div>
-                    )}
+                                    <div>
+                                        <p className="text-sm font-semibold text-white leading-tight">{row.name}</p>
+                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mt-1">
+                                            {row.dateLabel ? row.dateLabel : format(row.dueDate, 'dd MMM yy')} • {row.type}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right text-white">
+                                    {row.isPaid ? (
+                                        <span className="text-sm font-mono font-bold text-white">
+                                            ₹{Number(row.amount).toLocaleString('en-IN')}
+                                        </span>
+                                    ) : row.type === 'card' ? (
+                                        <span className="text-sm font-mono font-semibold text-gray-500">
+                                            TBA
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm font-mono font-bold text-white">
+                                            ₹{Number(row.amount).toLocaleString('en-IN')}
+                                        </span>
+                                    )}
+                                    <p className={cn("text-[9px] font-bold uppercase tracking-widest mt-1 text-right",
+                                        row.isPaid ? "text-emerald-500" : row.dueDate < new Date() ? "text-red-500" : "text-blue-500"
+                                    )}>
+                                        {row.isPaid ? 'PAID' : row.dueDate < new Date() ? 'OVERDUE' : 'PENDING'}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
                 </div>
             </div>
 
-            <DynamicStatementDocument 
-                rows={finalRows} 
-                monthLabel={displayLabel} 
-                filterType={viewMode === 'month' ? subType : (activeEntityId.startsWith('fund') ? 'fund' : 'card')} 
+            <DynamicStatementDocument
+                rows={finalRows}
+                monthLabel={displayLabel}
+                filterType={viewMode === 'month' ? subType : (activeEntityId.startsWith('fund') ? 'fund' : 'card')}
                 metrics={metrics}
             />
         </div>
