@@ -176,14 +176,14 @@ export default function StatementsPage() {
 
     return (
         <div 
-            className="animate-fade-in bg-background min-h-full overflow-hidden"
+            className="animate-fade-in bg-background absolute inset-0 flex flex-col overflow-hidden"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onWheel={handleWheel}
         >
 
-            {/* ── Header: filters — sticky, never scrolls away ── */}
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-white/5 pt-5 pb-4 px-4">
+            {/* ── Header: filters ── */}
+            <div className="shrink-0 bg-background/95 border-b border-white/5 pt-5 pb-3 px-4">
                 <div className="max-w-lg mx-auto flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
@@ -364,11 +364,11 @@ export default function StatementsPage() {
                 </div>
             </div>
 
-            {/* ── Body: metrics + natural-scroll list ── */}
+            {/* ── Body: metrics + scrollable list ── */}
             <div 
                 key={`${slideKey}-body`}
                 className={cn(
-                    "w-full max-w-lg mx-auto px-4 pt-4 animate-in fade-in duration-300 fill-mode-both",
+                    "flex-1 flex flex-col min-h-0 w-full max-w-lg mx-auto px-4 pt-3 animate-in fade-in duration-300 fill-mode-both",
                     slideDirection === 'left' ? "slide-in-from-right-8" : "slide-in-from-left-8"
                 )}
             >
@@ -389,56 +389,58 @@ export default function StatementsPage() {
                     </div>
                 </div>
 
-                {/* List — naturally scrolls with the page */}
-                {finalRows.length === 0 ? (
-                    <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
-                        <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
-                        <p className="text-sm font-medium text-gray-300">No records found</p>
-                        <p className="text-xs text-gray-500 mt-1">Adjust filters to see history.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-2 pb-28">
-                            {finalRows.map(row => (
-                                <div key={row.id} 
-                                     onClick={() => navigate(`/${row.type === 'fund' ? 'funds' : 'cards'}/${row.entityId}`)}
-                                     className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a] cursor-pointer active:scale-[0.98]">
-                                    <div className="flex items-start gap-3">
-                                        <div className="mt-1">
-                                            {row.isPaid ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : 
-                                            row.dueDate < new Date() ? <AlertCircle className="w-4 h-4 text-red-500" /> :
-                                            <Clock className="w-4 h-4 text-blue-500" />}
+                {/* List — solely scrolls within this container */}
+                <div className="flex-1 overflow-y-auto min-h-0 pb-28 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {finalRows.length === 0 ? (
+                        <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center mt-2">
+                            <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
+                            <p className="text-sm font-medium text-gray-300">No records found</p>
+                            <p className="text-xs text-gray-500 mt-1">Adjust filters to see history.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                                {finalRows.map(row => (
+                                    <div key={row.id} 
+                                         onClick={() => navigate(`/${row.type === 'fund' ? 'funds' : 'cards'}/${row.entityId}`)}
+                                         className="bg-[#111] border border-white/5 rounded-xl p-3.5 flex items-center justify-between group transition-colors hover:bg-[#1a1a1a] cursor-pointer active:scale-[0.98]">
+                                        <div className="flex items-start gap-3">
+                                            <div className="mt-1">
+                                                {row.isPaid ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : 
+                                                row.dueDate < new Date() ? <AlertCircle className="w-4 h-4 text-red-500" /> :
+                                                <Clock className="w-4 h-4 text-blue-500" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-white leading-tight">{row.name}</p>
+                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mt-1">
+                                                    {row.dateLabel ? row.dateLabel : format(row.dueDate, 'dd MMM yy')} • {row.type}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-semibold text-white leading-tight">{row.name}</p>
-                                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mt-1">
-                                                {row.dateLabel ? row.dateLabel : format(row.dueDate, 'dd MMM yy')} • {row.type}
+                                        <div className="text-right text-white">
+                                            {row.isPaid ? (
+                                                <span className="text-sm font-mono font-bold text-white">
+                                                    ₹{Number(row.amount).toLocaleString('en-IN')}
+                                                </span>
+                                            ) : row.type === 'card' ? (
+                                                <span className="text-sm font-mono font-semibold text-gray-500">
+                                                    TBA
+                                                </span>
+                                            ) : (
+                                                <span className="text-sm font-mono font-bold text-white">
+                                                    ₹{Number(row.amount).toLocaleString('en-IN')}
+                                                </span>
+                                            )}
+                                            <p className={cn("text-[9px] font-bold uppercase tracking-widest mt-1 text-right", 
+                                                row.isPaid ? "text-emerald-500" : row.dueDate < new Date() ? "text-red-500" : "text-blue-500"
+                                            )}>
+                                                {row.isPaid ? 'PAID' : row.dueDate < new Date() ? 'OVERDUE' : 'PENDING'}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right text-white">
-                                        {row.isPaid ? (
-                                            <span className="text-sm font-mono font-bold text-white">
-                                                ₹{Number(row.amount).toLocaleString('en-IN')}
-                                            </span>
-                                        ) : row.type === 'card' ? (
-                                            <span className="text-sm font-mono font-semibold text-gray-500">
-                                                TBA
-                                            </span>
-                                        ) : (
-                                            <span className="text-sm font-mono font-bold text-white">
-                                                ₹{Number(row.amount).toLocaleString('en-IN')}
-                                            </span>
-                                        )}
-                                        <p className={cn("text-[9px] font-bold uppercase tracking-widest mt-1 text-right", 
-                                            row.isPaid ? "text-emerald-500" : row.dueDate < new Date() ? "text-red-500" : "text-blue-500"
-                                        )}>
-                                            {row.isPaid ? 'PAID' : row.dueDate < new Date() ? 'OVERDUE' : 'PENDING'}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                    </div>
-                )}
+                                ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             <DynamicStatementDocument 
