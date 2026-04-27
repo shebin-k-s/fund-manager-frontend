@@ -34,8 +34,8 @@ export default defineConfig(({ mode }) => ({
         name: 'Velo',
         short_name: 'Velo',
         description: 'Manage Credit Cards & Recurring Deposits',
-        theme_color: '#08376e', // Matches splash background for seamless edge-to-edge color
-        background_color: '#08376e', // Exact match to the outer blue graphic
+        theme_color: '#0a0a0a',
+        background_color: '#0a0a0a',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
