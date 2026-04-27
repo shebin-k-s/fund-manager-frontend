@@ -35,23 +35,23 @@ export default defineConfig(({ mode }) => ({
         short_name: 'Velo',
         description: 'Manage Credit Cards & Recurring Deposits',
         theme_color: '#065f46',
-        background_color: '#0a0a0a',
+        background_color: '#0a122a', // Exact match to the maskable icon navy color
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         scope: '/',
         icons: [
           {
-            src: 'icon-maskable.png',
-            sizes: '192x192',
+            src: 'logo.png',
+            sizes: '192x192 512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           },
           {
             src: 'icon-maskable.png',
-            sizes: '512x512',
+            sizes: '192x192 512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'maskable'
           }
         ]
       }
