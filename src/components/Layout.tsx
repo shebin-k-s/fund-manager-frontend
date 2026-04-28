@@ -1,6 +1,8 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useCallback, useRef } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Wallet, CreditCard, CalendarDays, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SwipeGestureProvider, useSwipeGesture } from '@/context/SwipeGestureContext';
 
 const tabs = [
   { path: '/', icon: LayoutDashboard, label: 'Home' },
@@ -10,18 +12,121 @@ const tabs = [
   { path: '/statements', icon: FileText, label: 'Statements' },
 ];
 
-export default function Layout() {
+const SWIPE_THRESHOLD = 50;
+const SWIPE_RATIO = 1.2;
+
+function LayoutInner() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { isGlobalSwipeEnabled } = useSwipeGesture();
+
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const lastX = useRef(0);
+  const lastY = useRef(0);
+  const tracking = useRef(false);
+  const navigated = useRef(false);
+
   const isActive = (path: string) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path);
+
+  const currentIndex = tabs.findIndex(t => isActive(t.path));
+  const currentIndexRef = useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
+
+  const doNavigate = useCallback((direction: 'left' | 'right') => {
+    if (navigated.current) return;
+    navigated.current = true;
+    const idx = currentIndexRef.current;
+    if (direction === 'left' && idx + 1 < tabs.length) {
+      navigate(tabs[idx + 1].path);
+    } else if (direction === 'right' && idx - 1 >= 0) {
+      navigate(tabs[idx - 1].path);
+    }
+  }, [navigate]);
+
+  const checkAndNavigate = useCallback(() => {
+    if (!isGlobalSwipeEnabled()) return;
+    const deltaX = startX.current - lastX.current;
+    const deltaY = startY.current - lastY.current;
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY) * SWIPE_RATIO) {
+      doNavigate(deltaX > 0 ? 'left' : 'right');
+    }
+  }, [isGlobalSwipeEnabled, doNavigate]);
+
+  // ─── Touch events (mobile) ───
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    lastX.current = e.touches[0].clientX;
+    lastY.current = e.touches[0].clientY;
+    tracking.current = true;
+    navigated.current = false;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!tracking.current || navigated.current) return;
+    lastX.current = e.touches[0].clientX;
+    lastY.current = e.touches[0].clientY;
+    checkAndNavigate();
+  }, [checkAndNavigate]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!tracking.current) return;
+    tracking.current = false;
+    if (navigated.current) return;
+    checkAndNavigate();
+  }, [checkAndNavigate]);
+
+  // ─── Mouse events (desktop / DevTools without touch emulation) ───
+  const mouseDown = useRef(false);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only handle left mouse button
+    if (e.button !== 0) return;
+    mouseDown.current = true;
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    lastX.current = e.clientX;
+    lastY.current = e.clientY;
+    navigated.current = false;
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!mouseDown.current || navigated.current) return;
+    lastX.current = e.clientX;
+    lastY.current = e.clientY;
+    checkAndNavigate();
+  }, [checkAndNavigate]);
+
+  const handleMouseUp = useCallback(() => {
+    if (!mouseDown.current) return;
+    mouseDown.current = false;
+    if (navigated.current) return;
+    checkAndNavigate();
+  }, [checkAndNavigate]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseDown.current = false;
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-background flex justify-center">
       <div className="w-full h-screen max-w-md relative flex flex-col bg-background/50 sm:border-x sm:border-white/5">
-        
+
         {/* Main Content */}
-        {/* Prevent bottom overlap with a large bottom padding (pb-[80px]) on the scrolling element instead of mb */}
-        <div id="main-scroll-container" className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1">
+        <div
+          id="main-scroll-container"
+          className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1"
+          style={{ touchAction: 'pan-y' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+        >
           <Outlet />
         </div>
 
@@ -55,5 +160,13 @@ export default function Layout() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Layout() {
+  return (
+    <SwipeGestureProvider>
+      <LayoutInner />
+    </SwipeGestureProvider>
   );
 }

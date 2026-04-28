@@ -8,9 +8,11 @@ import { useNavigate } from 'react-router-dom';
 import { addMonths, subMonths, startOfDay, format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Landmark, CreditCard, CheckCircle2, Clock, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSwipeGesture } from '@/context/SwipeGestureContext';
 
 export default function CalendarPage() {
     const navigate = useNavigate();
+    const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [slideKey, setSlideKey] = useState(0);
@@ -33,12 +35,17 @@ export default function CalendarPage() {
     }, []);
 
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        // Block global tab swipe – calendar card owns this gesture
+        disableGlobalSwipe();
         touchStartX.current = e.touches[0].clientX;
         touchStartY.current = e.touches[0].clientY;
-    }, []);
+    }, [disableGlobalSwipe]);
 
     const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-        if (touchStartX.current === null || touchStartY.current === null) return;
+        if (touchStartX.current === null || touchStartY.current === null) {
+            enableGlobalSwipe();
+            return;
+        }
         const deltaX = touchStartX.current - e.changedTouches[0].clientX;
         const deltaY = touchStartY.current - e.changedTouches[0].clientY;
         if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -46,7 +53,9 @@ export default function CalendarPage() {
         }
         touchStartX.current = null;
         touchStartY.current = null;
-    }, [goNextMonth, goPrevMonth]);
+        // Restore global swipe after local gesture is resolved
+        enableGlobalSwipe();
+    }, [goNextMonth, goPrevMonth, enableGlobalSwipe]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
         if (scrollCooldown.current) return;

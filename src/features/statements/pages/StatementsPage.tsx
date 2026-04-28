@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
+import { useSwipeGesture } from '@/context/SwipeGestureContext';
 import { useNavigate } from 'react-router-dom';
 import { useFundsQuery } from '@/features/funds/hooks/useFunds';
 import { useCardsQuery } from '@/features/credit-cards/hooks/useCreditCards';
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 export default function StatementsPage() {
     const navigate = useNavigate();
+    const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
     const { data: funds = [] } = useFundsQuery();
     const { data: cards = [] } = useCardsQuery();
 
@@ -39,12 +41,17 @@ export default function StatementsPage() {
     }, [viewMode]);
 
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        // Block global tab swipe – StatementsPage owns all horizontal swipes
+        disableGlobalSwipe();
         touchStartX.current = e.touches[0].clientX;
         touchStartY.current = e.touches[0].clientY;
-    }, []);
+    }, [disableGlobalSwipe]);
 
     const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-        if (touchStartX.current === null || touchStartY.current === null) return;
+        if (touchStartX.current === null || touchStartY.current === null) {
+            enableGlobalSwipe();
+            return;
+        }
         const deltaX = touchStartX.current - e.changedTouches[0].clientX;
         const deltaY = touchStartY.current - e.changedTouches[0].clientY;
         if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -52,7 +59,9 @@ export default function StatementsPage() {
         }
         touchStartX.current = null;
         touchStartY.current = null;
-    }, [switchToEntity, switchToMonth]);
+        // Restore global swipe after local gesture is resolved
+        enableGlobalSwipe();
+    }, [switchToEntity, switchToMonth, enableGlobalSwipe]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
         if (scrollCooldown.current) return;
