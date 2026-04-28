@@ -64,6 +64,9 @@ export default function StatementsPage() {
     }, [switchToEntity, switchToMonth, enableGlobalSwipe]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
+        // Always stop propagation so the global tab-swipe wheel handler
+        // never fires while the user is on the Statements page
+        e.stopPropagation();
         if (scrollCooldown.current) return;
         if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
             scrollCooldown.current = true;
@@ -71,6 +74,7 @@ export default function StatementsPage() {
             setTimeout(() => { scrollCooldown.current = false; }, 500);
         }
     }, [switchToEntity, switchToMonth]);
+
 
     // Sub-filters
     const [subType, setSubType] = useState<'all' | 'fund' | 'card'>('all');

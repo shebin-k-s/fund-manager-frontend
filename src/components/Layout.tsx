@@ -12,20 +12,28 @@ const tabs = [
   { path: '/statements', icon: FileText, label: 'Statements' },
 ];
 
-const SWIPE_THRESHOLD = 50;
-const SWIPE_RATIO = 1.2;
+const SWIPE_THRESHOLD = 30;  // px — responsive on mobile
+const SWIPE_RATIO = 1.0;    // deltaX just needs to be > deltaY
+const WHEEL_THRESHOLD = 40; // deltaX pixels for trackpad horizontal swipe
 
 function LayoutInner() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { isGlobalSwipeEnabled } = useSwipeGesture();
 
+  // ─── Shared state for touch gestures ───
   const startX = useRef(0);
   const startY = useRef(0);
   const lastX = useRef(0);
   const lastY = useRef(0);
   const tracking = useRef(false);
   const navigated = useRef(false);
+  // Captured once at touchstart — locked for the entire gesture so inner
+  // components' enableGlobalSwipe() in their onTouchEnd can't re-enable mid-gesture
+  const gestureAllowed = useRef(false);
+
+  // Wheel cooldown to debounce rapid trackpad events
+  const wheelCooldown = useRef(false);
 
   const isActive = (path: string) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path);
@@ -46,23 +54,26 @@ function LayoutInner() {
   }, [navigate]);
 
   const checkAndNavigate = useCallback(() => {
-    if (!isGlobalSwipeEnabled()) return;
+    if (!gestureAllowed.current) return;
     const deltaX = startX.current - lastX.current;
     const deltaY = startY.current - lastY.current;
     if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY) * SWIPE_RATIO) {
       doNavigate(deltaX > 0 ? 'left' : 'right');
     }
-  }, [isGlobalSwipeEnabled, doNavigate]);
+  }, [doNavigate]);
 
-  // ─── Touch events (mobile) ───
+  // ─── Touch events (mobile PWA) ───
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Capture enabled state NOW — inner components have already called
+    // disableGlobalSwipe() in their onTouchStart (React bubbles inner→outer).
+    gestureAllowed.current = isGlobalSwipeEnabled();
     startX.current = e.touches[0].clientX;
     startY.current = e.touches[0].clientY;
     lastX.current = e.touches[0].clientX;
     lastY.current = e.touches[0].clientY;
     tracking.current = true;
     navigated.current = false;
-  }, []);
+  }, [isGlobalSwipeEnabled]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!tracking.current || navigated.current) return;
@@ -78,37 +89,21 @@ function LayoutInner() {
     checkAndNavigate();
   }, [checkAndNavigate]);
 
-  // ─── Mouse events (desktop / DevTools without touch emulation) ───
-  const mouseDown = useRef(false);
+  // ─── Wheel events (desktop 2-finger trackpad swipe) ───
+  // Calendar and Statements call e.stopPropagation() in their own
+  // onWheel handlers so this never fires on those screens.
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (wheelCooldown.current) return;
+    if (!isGlobalSwipeEnabled()) return;
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Only handle left mouse button
-    if (e.button !== 0) return;
-    mouseDown.current = true;
-    startX.current = e.clientX;
-    startY.current = e.clientY;
-    lastX.current = e.clientX;
-    lastY.current = e.clientY;
-    navigated.current = false;
-  }, []);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!mouseDown.current || navigated.current) return;
-    lastX.current = e.clientX;
-    lastY.current = e.clientY;
-    checkAndNavigate();
-  }, [checkAndNavigate]);
-
-  const handleMouseUp = useCallback(() => {
-    if (!mouseDown.current) return;
-    mouseDown.current = false;
-    if (navigated.current) return;
-    checkAndNavigate();
-  }, [checkAndNavigate]);
-
-  const handleMouseLeave = useCallback(() => {
-    mouseDown.current = false;
-  }, []);
+    // Only trigger on clearly horizontal trackpad swipes
+    if (Math.abs(e.deltaX) > WHEEL_THRESHOLD && Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.5) {
+      wheelCooldown.current = true;
+      setTimeout(() => { wheelCooldown.current = false; }, 600);
+      navigated.current = false;
+      doNavigate(e.deltaX > 0 ? 'left' : 'right');
+    }
+  }, [isGlobalSwipeEnabled, doNavigate]);
 
   return (
     <div className="min-h-screen w-full bg-background flex justify-center">
@@ -122,10 +117,7 @@ function LayoutInner() {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
         >
           <Outlet />
         </div>

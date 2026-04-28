@@ -58,6 +58,9 @@ export default function CalendarPage() {
     }, [goNextMonth, goPrevMonth, enableGlobalSwipe]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
+        // Always stop propagation so the global tab-swipe wheel handler
+        // never fires while the user is on the Calendar page
+        e.stopPropagation();
         if (scrollCooldown.current) return;
         if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
             scrollCooldown.current = true;
@@ -65,6 +68,7 @@ export default function CalendarPage() {
             setTimeout(() => { scrollCooldown.current = false; }, 500);
         }
     }, [goNextMonth, goPrevMonth]);
+
 
     const { data: funds = [] } = useFundsQuery();
     const { data: cards = [] } = useCardsQuery();
