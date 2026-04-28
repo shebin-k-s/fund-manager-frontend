@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Wallet, CreditCard, CalendarDays, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,11 @@ function LayoutInner() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { isGlobalSwipeEnabled } = useSwipeGesture();
+
+  useEffect(() => {
+    const el = document.getElementById('main-scroll-container');
+    if (el) el.scrollTop = 0;
+  }, [pathname]);
 
   // ─── Shared state for touch gestures ───
   const startX = useRef(0);

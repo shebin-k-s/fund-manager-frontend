@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useSwipeGesture } from '@/context/SwipeGestureContext';
 import { useNavigate } from 'react-router-dom';
 import { useFundsQuery } from '@/features/funds/hooks/useFunds';
@@ -40,6 +40,22 @@ export default function StatementsPage() {
         setViewMode('month');
     }, [viewMode]);
 
+    const mountCooldown = useRef(true);
+    useEffect(() => {
+        const timer = setTimeout(() => { mountCooldown.current = false; }, 700);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const processSwipe = useCallback((isNext: boolean) => {
+        if (mountCooldown.current) return;
+        if (isNext) {
+            if (viewMode === 'month') switchToEntity();
+        } else {
+            if (viewMode === 'entity') switchToMonth();
+            else navigate('/calendar');
+        }
+    }, [viewMode, switchToEntity, switchToMonth, navigate]);
+
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
         // Block global tab swipe – StatementsPage owns all horizontal swipes
         disableGlobalSwipe();
@@ -55,25 +71,25 @@ export default function StatementsPage() {
         const deltaX = touchStartX.current - e.changedTouches[0].clientX;
         const deltaY = touchStartY.current - e.changedTouches[0].clientY;
         if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            if (deltaX > 0) switchToEntity(); else switchToMonth();
+            processSwipe(deltaX > 0);
         }
         touchStartX.current = null;
         touchStartY.current = null;
         // Restore global swipe after local gesture is resolved
         enableGlobalSwipe();
-    }, [switchToEntity, switchToMonth, enableGlobalSwipe]);
+    }, [processSwipe, enableGlobalSwipe]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
         // Always stop propagation so the global tab-swipe wheel handler
         // never fires while the user is on the Statements page
         e.stopPropagation();
-        if (scrollCooldown.current) return;
+        if (scrollCooldown.current || mountCooldown.current) return;
         if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
             scrollCooldown.current = true;
-            if (e.deltaX > 0) switchToEntity(); else switchToMonth();
+            processSwipe(e.deltaX > 0);
             setTimeout(() => { scrollCooldown.current = false; }, 500);
         }
-    }, [switchToEntity, switchToMonth]);
+    }, [processSwipe]);
 
 
     // Sub-filters
