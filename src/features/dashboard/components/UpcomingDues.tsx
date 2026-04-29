@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isBefore } from 'date-fns';
 import { CreditCard as CCIcon, Landmark } from 'lucide-react';
@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { EmptyState } from './EmptyState';
 import { CreditCard } from '@/features/credit-cards/types';
 import { Fund } from '@/types/finance';
+import { useSwipeGesture } from '@/context/SwipeGestureContext';
 
 const gradientClasses = ['cc-gradient-1', 'cc-gradient-2', 'cc-gradient-3', 'cc-gradient-4'];
 
@@ -18,9 +19,59 @@ interface UpcomingDuesProps {
 
 export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesProps) {
   const [activeTab, setActiveTab] = useState<'funds' | 'cards'>('funds');
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
+  const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
+
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const scrollCooldown = useRef(false);
+
+  const switchTab = (tab: 'funds' | 'cards', dir: 'left' | 'right') => {
+    if (activeTab === tab) return;
+    setSlideDirection(dir);
+    setActiveTab(tab);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    disableGlobalSwipe();
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) {
+      enableGlobalSwipe();
+      return;
+    }
+    const deltaX = touchStartX.current - e.changedTouches[0].clientX;
+    const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+    
+    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX > 0) switchTab('cards', 'left'); else switchTab('funds', 'right');
+    }
+    
+    touchStartX.current = null;
+    touchStartY.current = null;
+    enableGlobalSwipe();
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (scrollCooldown.current) return;
+    if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      scrollCooldown.current = true;
+      if (e.deltaX > 0) switchTab('cards', 'left'); else switchTab('funds', 'right');
+      setTimeout(() => { scrollCooldown.current = false; }, 500);
+    }
+  };
 
   return (
-    <div className="glass-card p-5">
+    <div 
+      className="glass-card p-5 overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onWheel={handleWheel}
+    >
       {/* Section title */}
       <div className="flex items-center gap-2 mb-4">
         <div className="w-1.5 h-4 bg-emerald-500/80 rounded-full" />
@@ -31,7 +82,7 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div className="flex bg-white/5 rounded-xl p-1 gap-1">
           <button
-            onClick={() => setActiveTab('funds')}
+            onClick={() => switchTab('funds', 'right')}
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
               activeTab === 'funds'
@@ -51,7 +102,7 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
             )}
           </button>
           <button
-            onClick={() => setActiveTab('cards')}
+            onClick={() => switchTab('cards', 'left')}
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
               activeTab === 'cards'
@@ -89,29 +140,37 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
       </div>
 
       {/* Content */}
-      {isLoading ? (
-        <DuesSkeleton />
-      ) : activeTab === 'funds' ? (
-        funds.length > 0 ? (
-          <div className="space-y-3">
-            {funds.map(({ fund, date }) => (
-              <FundItem key={fund.id} fund={fund} date={date} today={today} />
-            ))}
-          </div>
+      <div
+        key={activeTab}
+        className={cn(
+          "animate-in fade-in duration-300 fill-mode-both",
+          slideDirection === 'left' ? "slide-in-from-right-8" : "slide-in-from-left-8"
+        )}
+      >
+        {isLoading ? (
+          <DuesSkeleton />
+        ) : activeTab === 'funds' ? (
+          funds.length > 0 ? (
+            <div className="space-y-3">
+              {funds.map(({ fund, date }) => (
+                <FundItem key={fund.id} fund={fund} date={date} today={today} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState message="No upcoming fund payments" />
+          )
         ) : (
-          <EmptyState message="No upcoming fund payments" />
-        )
-      ) : (
-        cards.length > 0 ? (
-          <div className="space-y-3">
-            {cards.map(({ card, cycle }, index) => (
-              <CardItem key={card.id} card={card} cycle={cycle} today={today} index={index} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState message="No upcoming card dues" />
-        )
-      )}
+          cards.length > 0 ? (
+            <div className="space-y-3">
+              {cards.map(({ card, cycle }, index) => (
+                <CardItem key={card.id} card={card} cycle={cycle} today={today} index={index} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState message="No upcoming card dues" />
+          )
+        )}
+      </div>
     </div>
   );
 }

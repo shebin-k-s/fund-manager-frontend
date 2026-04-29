@@ -212,7 +212,7 @@ export default function StatementsPage() {
         >
 
             {/* ── Header: filters ── */}
-            <div className="shrink-0 bg-background/95 border-b border-white/5 pt-5 pb-3 px-4">
+            <div className="relative z-50 shrink-0 bg-background/95 border-b border-white/5 pt-5 pb-3 px-4">
                 <div className="max-w-lg mx-auto flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
@@ -473,13 +473,24 @@ export default function StatementsPage() {
                 )}
                 </div>
             </div>
+            {/* Resolve the raw entity object for detailed cover pages if applicable */}
+            {(() => {
+                const typePrefix = activeEntityId.startsWith('fund') ? 'fund-' : 'card-';
+                const rawId = activeEntityId.replace(typePrefix, '');
+                const entityContext = viewMode === 'entity' 
+                    ? (activeEntityId.startsWith('fund') ? funds.find(f => f.id === rawId) : cards.find(c => c.id === rawId))
+                    : undefined;
 
-            <DynamicStatementDocument
-                rows={finalRows}
-                monthLabel={displayLabel}
-                filterType={viewMode === 'month' ? subType : (activeEntityId.startsWith('fund') ? 'fund' : 'card')}
-                metrics={metrics}
-            />
+                return (
+                    <DynamicStatementDocument
+                        rows={finalRows}
+                        monthLabel={displayLabel}
+                        filterType={viewMode === 'month' ? subType : (activeEntityId.startsWith('fund') ? 'fund' : 'card')}
+                        metrics={metrics}
+                        entityContext={entityContext}
+                    />
+                );
+            })()}
         </div>
     );
 }

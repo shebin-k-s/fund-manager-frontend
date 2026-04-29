@@ -12,23 +12,18 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
     toast.loading('Generating PDF Statement...', { id: 'pdf-toast' });
 
     try {
-        // We preserve originals to restore them
         const originalDisplay = input.style.display;
         const originalPosition = input.style.position;
         const originalLeft = input.style.left;
         const originalTop = input.style.top;
 
-        // Temporarily mount the element unconstrained off-screen
-        // This ensures parent 'overflow:hidden' and 'max-w' bounds don't crop the large A4 canvas
         input.style.display = 'block';
         input.style.position = 'fixed';
         input.style.left = '-10000px';
         input.style.top = '0px';
 
-        // Wait a tiny bit for the browser to recalculate the out-of-flow layout
         await new Promise(resolve => setTimeout(resolve, 50));
 
-        // Capture offscreen element with 2x resolution
         const canvas = await html2canvas(input, {
             scale: 2,
             useCORS: true,
@@ -36,7 +31,6 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
             backgroundColor: '#ffffff'
         });
 
-        // Restore original display
         input.style.display = originalDisplay;
         input.style.position = originalPosition;
         input.style.left = originalLeft;
@@ -44,7 +38,6 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
 
         const imgData = canvas.toDataURL('image/png');
         
-        // A4 format dimensions in mm
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
@@ -55,19 +48,40 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
         const pageHeight = pdf.internal.pageSize.getHeight();
         const imgHeight = (canvas.height * pdfWidth) / canvas.width;
         
+        const marginY = 12; 
+        const contentPageHeight = pageHeight - marginY * 2;
+
         let heightLeft = imgHeight;
         let position = 0;
 
-        // Add first page
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pageHeight;
+        
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, pageHeight - marginY, pdfWidth, marginY, 'F');
+        
+        heightLeft -= (pageHeight - marginY);
 
-        // Loop and add additional pages if content exceeds one page
-        while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
+        while (heightLeft > marginY + 5) {
+            position -= (position === 0 ? (pageHeight - marginY) : contentPageHeight);
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pageHeight;
+            
+            pdf.addImage(imgData, 'PNG', 0, position + marginY, pdfWidth, imgHeight);
+            
+            pdf.setFillColor(255, 255, 255);
+            pdf.rect(0, 0, pdfWidth, marginY, 'F');
+            
+            pdf.rect(0, pageHeight - marginY, pdfWidth, marginY, 'F');
+            
+            heightLeft -= contentPageHeight;
+        }
+
+        const totalPages = (pdf as any).internal.getNumberOfPages() || (pdf as any).getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(8);
+            pdf.setTextColor(150, 150, 150);
+            // Draw precisely inside the bottom 12mm blank-space margin (at 5mm offset from physical bottom)
+            pdf.text(`Page ${i} of ${totalPages}`, pdfWidth / 2, pageHeight - 5, { align: 'center' });
         }
         
         const fileName = customFileName 
@@ -79,6 +93,7 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
         toast.success('PDF Statement downloaded perfectly!', { id: 'pdf-toast' });
     } catch (err) {
         console.error("PDF generation failed", err);
+        if (input) input.style.display = 'none';
         toast.error('Failed to generate PDF. See console.', { id: 'pdf-toast' });
     }
 };

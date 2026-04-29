@@ -151,12 +151,7 @@ export default function FundDetailPage() {
         isLoading={false}
       />
 
-      <div 
-        className="page-content"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onWheel={handleWheel}
-      >
+      <div className="page-content">
         <MissedAlert missed={missed} isLoading={false} />
 
         <FundStatsCards
@@ -168,24 +163,31 @@ export default function FundDetailPage() {
           isLoading={false}
         />
 
-        <MonthNavigation
-          viewMonth={viewMonth}
-          canGoPrev={canGoPrev}
-          canGoNext={canGoNext}
-          onPrev={goPrevMonth}
-          onNext={goNextMonth}
-          isLoading={false}
-        />
+        <div
+          className="flex flex-col gap-4"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onWheel={handleWheel}
+        >
+          <MonthNavigation
+            viewMonth={viewMonth}
+            canGoPrev={canGoPrev}
+            canGoNext={canGoNext}
+            onPrev={goPrevMonth}
+            onNext={goNextMonth}
+            isLoading={false}
+          />
 
-        <PaymentList
-          dates={monthDates}
-          fund={fund}
-          today={today}
-          onPay={handlePay}
-          onRemove={handleRemove}
-          isPending={isPending}
-          isLoading={false}
-        />
+          <PaymentList
+            dates={monthDates}
+            fund={fund}
+            today={today}
+            onPay={handlePay}
+            onRemove={handleRemove}
+            isPending={isPending}
+            isLoading={false}
+          />
+        </div>
         
         <FundStatementDocument fund={fund} />
       </div>

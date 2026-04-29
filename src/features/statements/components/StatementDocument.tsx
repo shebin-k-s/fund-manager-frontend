@@ -92,7 +92,7 @@ export function StatementDocument({ funds, cards }: StatementDocumentProps) {
                                             <td className="py-4 px-4 font-medium">{entry.name}</td>
                                             <td className="py-4 px-4">{format(entry.dueDate, 'dd MMM yyyy')}</td>
                                             <td className="py-4 px-4">
-                                                <span className={`inline-block align-middle px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full ${entry.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                <span className={`inline-block align-middle text-[10px] uppercase tracking-widest font-black ${entry.isPaid ? 'text-emerald-600' : 'text-red-600'}`}>
                                                     {entry.isPaid ? 'Paid' : 'Pending'}
                                                 </span>
                                             </td>
@@ -129,7 +129,7 @@ export function StatementDocument({ funds, cards }: StatementDocumentProps) {
                                             <td className="py-4 px-4 font-medium">{entry.name}</td>
                                             <td className="py-4 px-4">{format(entry.dueDate, 'dd MMM yyyy')}</td>
                                             <td className="py-4 px-4">
-                                                <span className={`inline-block align-middle px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full ${entry.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                <span className={`inline-block align-middle text-[10px] uppercase tracking-widest font-black ${entry.isPaid ? 'text-emerald-600' : 'text-red-600'}`}>
                                                     {entry.isPaid ? 'Paid' : 'Pending'}
                                                 </span>
                                             </td>

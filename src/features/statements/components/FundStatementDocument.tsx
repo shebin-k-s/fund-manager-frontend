@@ -79,11 +79,11 @@ export function FundStatementDocument({ fund }: FundStatementDocumentProps) {
                                             <td className="py-4 px-4">{format(date, 'dd MMM yyyy')}</td>
                                             <td className="py-4 px-4 align-middle">
                                                 {isPaid ? (
-                                                    <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-green-100 text-green-800 align-middle">Paid</span>
+                                                    <span className="inline-block align-middle text-[10px] uppercase tracking-widest font-black text-emerald-600">Paid</span>
                                                 ) : isPast ? (
-                                                    <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-red-100 text-red-800 align-middle">Missed</span>
+                                                    <span className="inline-block align-middle text-[10px] uppercase tracking-widest font-black text-red-600">Missed</span>
                                                 ) : (
-                                                    <span className="inline-block px-3 pt-[5px] pb-[3px] text-[10px] uppercase tracking-wider font-bold rounded-full bg-blue-100 text-blue-800 align-middle">Scheduled</span>
+                                                    <span className="inline-block align-middle text-[10px] uppercase tracking-widest font-black text-blue-600">Scheduled</span>
                                                 )}
                                             </td>
                                             <td className="py-4 px-4 text-right font-mono font-semibold">
