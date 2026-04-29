@@ -10,10 +10,12 @@ import { PaymentList } from '../components/fundDetail/PaymentList';
 import { FundStatsCards } from '../components/fundDetail/statsCards';
 import { FundStatementDocument } from '@/features/statements/components/FundStatementDocument';
 import type { Fund } from '../types';
+import { useSwipeGesture } from '@/context/SwipeGestureContext';
 
 export default function FundDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
 
   const { data: fund, isLoading } = useFundById(id!);
   const markPaid = useMarkFundPaid();
@@ -92,12 +94,16 @@ export default function FundDetailPage() {
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    disableGlobalSwipe();
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
+    if (touchStartX.current === null || touchStartY.current === null) {
+      enableGlobalSwipe();
+      return;
+    }
     const deltaX = touchStartX.current - e.changedTouches[0].clientX;
     const deltaY = touchStartY.current - e.changedTouches[0].clientY;
     
@@ -108,9 +114,11 @@ export default function FundDetailPage() {
     
     touchStartX.current = null;
     touchStartY.current = null;
+    enableGlobalSwipe();
   };
 
   const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
     if (scrollCooldown.current) return;
     if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) { // 20px threshold and prominent horizontal
       scrollCooldown.current = true;

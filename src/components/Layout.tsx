@@ -39,6 +39,15 @@ function LayoutInner() {
 
   // Wheel cooldown to debounce rapid trackpad events
   const wheelCooldown = useRef(false);
+  const wheelTimeout = useRef<any>(null);
+
+  const prevPathname = useRef(pathname);
+  if (prevPathname.current !== pathname) {
+    prevPathname.current = pathname;
+    wheelCooldown.current = true;
+    if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+    wheelTimeout.current = setTimeout(() => { wheelCooldown.current = false; }, 250);
+  }
 
   const isActive = (path: string) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path);
@@ -98,13 +107,18 @@ function LayoutInner() {
   // Calendar and Statements call e.stopPropagation() in their own
   // onWheel handlers so this never fires on those screens.
   const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (wheelCooldown.current) return;
+    if (wheelCooldown.current) {
+      if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+      wheelTimeout.current = setTimeout(() => { wheelCooldown.current = false; }, 250);
+      return;
+    }
     if (!isGlobalSwipeEnabled()) return;
 
     // Only trigger on clearly horizontal trackpad swipes
     if (Math.abs(e.deltaX) > WHEEL_THRESHOLD && Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.5) {
       wheelCooldown.current = true;
-      setTimeout(() => { wheelCooldown.current = false; }, 600);
+      if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+      wheelTimeout.current = setTimeout(() => { wheelCooldown.current = false; }, 250);
       navigated.current = false;
       doNavigate(e.deltaX > 0 ? 'left' : 'right');
     }
