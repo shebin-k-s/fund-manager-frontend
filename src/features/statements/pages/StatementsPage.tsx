@@ -472,12 +472,15 @@ export default function StatementsPage() {
                     </div>
                 )}
                 </div>
+
+
             </div>
+
             {/* Resolve the raw entity object for detailed cover pages if applicable */}
             {(() => {
                 const typePrefix = activeEntityId.startsWith('fund') ? 'fund-' : 'card-';
                 const rawId = activeEntityId.replace(typePrefix, '');
-                const entityContext = viewMode === 'entity' 
+                const entityContext = viewMode === 'entity'
                     ? (activeEntityId.startsWith('fund') ? funds.find(f => f.id === rawId) : cards.find(c => c.id === rawId))
                     : undefined;
 

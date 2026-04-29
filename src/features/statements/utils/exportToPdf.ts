@@ -8,7 +8,7 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
         toast.error('Unable to locate statement layout.');
         return;
     }
-    
+
     toast.loading('Generating PDF Statement...', { id: 'pdf-toast' });
 
     try {
@@ -28,7 +28,11 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
             scale: 2,
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#f8fafc', // slate-50 (soft off-white)
+            onclone: (_doc, el) => {              // ← new: force color rendering
+                // el.style.webkitPrintColorAdjust = 'exact';
+                el.style.printColorAdjust = 'exact';
+            },
         });
 
         input.style.display = originalDisplay;
@@ -37,7 +41,7 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
         input.style.top = originalTop;
 
         const imgData = canvas.toDataURL('image/png');
-        
+
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
@@ -47,31 +51,30 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        const marginY = 12; 
+
+        const marginY = 12;
         const contentPageHeight = pageHeight - marginY * 2;
 
         let heightLeft = imgHeight;
         let position = 0;
 
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-        
-        pdf.setFillColor(255, 255, 255);
+
+        pdf.setFillColor(248, 250, 252);          // slate-50
         pdf.rect(0, pageHeight - marginY, pdfWidth, marginY, 'F');
-        
+
         heightLeft -= (pageHeight - marginY);
 
         while (heightLeft > marginY + 5) {
             position -= (position === 0 ? (pageHeight - marginY) : contentPageHeight);
             pdf.addPage();
-            
+
             pdf.addImage(imgData, 'PNG', 0, position + marginY, pdfWidth, imgHeight);
-            
-            pdf.setFillColor(255, 255, 255);
+
+            pdf.setFillColor(248, 250, 252);      // match page bg on all pages
             pdf.rect(0, 0, pdfWidth, marginY, 'F');
-            
             pdf.rect(0, pageHeight - marginY, pdfWidth, marginY, 'F');
-            
+
             heightLeft -= contentPageHeight;
         }
 
@@ -80,19 +83,18 @@ export const exportStatementToPdf = async (elementId: string, customFileName?: s
             pdf.setPage(i);
             pdf.setFontSize(8);
             pdf.setTextColor(150, 150, 150);
-            // Draw precisely inside the bottom 12mm blank-space margin (at 5mm offset from physical bottom)
             pdf.text(`Page ${i} of ${totalPages}`, pdfWidth / 2, pageHeight - 5, { align: 'center' });
         }
-        
-        const fileName = customFileName 
+
+        const fileName = customFileName
             ? `${customFileName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}`
             : `Financial_Statement_${new Date().toISOString().split('T')[0]}`;
-            
+
         pdf.save(`${fileName}.pdf`);
-        
+
         toast.success('PDF Statement downloaded perfectly!', { id: 'pdf-toast' });
     } catch (err) {
-        console.error("PDF generation failed", err);
+        console.error('PDF generation failed', err);
         if (input) input.style.display = 'none';
         toast.error('Failed to generate PDF. See console.', { id: 'pdf-toast' });
     }
