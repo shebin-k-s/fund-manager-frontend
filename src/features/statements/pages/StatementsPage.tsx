@@ -485,6 +485,7 @@ export default function StatementsPage() {
                     : undefined;
 
                 return (
+
                     <DynamicStatementDocument
                         rows={finalRows}
                         monthLabel={displayLabel}
@@ -494,6 +495,6 @@ export default function StatementsPage() {
                     />
                 );
             })()}
-        </div>
+        </div >
     );
 }

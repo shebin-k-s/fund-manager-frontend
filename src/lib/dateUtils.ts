@@ -1,4 +1,4 @@
-import { addDays, addMonths, format, isBefore, startOfDay, getDay, getDaysInMonth } from 'date-fns';
+import { addDays, addMonths, format, isBefore, isAfter, startOfDay, getDay, getDaysInMonth } from 'date-fns';
 import type { Fund, CreditCard, BillingCycle } from '@/types/finance';
 
 export function dateKey(d: Date): string {
@@ -100,8 +100,20 @@ export function getMissedCardCount(card: CreditCard): number {
 export function getNextUnpaidCycle(card: CreditCard): BillingCycle | null {
   const today = startOfDay(new Date());
   const cycles = getBillingCycles(card);
-  return cycles.find(c => !c.isPaid && !isBefore(c.dueDate, today)) ||
-    cycles.find(c => !c.isPaid) || null;
+
+  // Consider only cycles where bill date has arrived (matches backend logic)
+  const activeUnpaid = cycles.filter(c => !c.isPaid && !isAfter(c.billDate, today));
+
+  // First try to find upcoming unpaid cycle
+  const upcoming = activeUnpaid.find(c => !isBefore(c.dueDate, today));
+  if (upcoming) return upcoming;
+
+  // Then find the oldest overdue
+  const overdue = activeUnpaid
+    .filter(c => isBefore(c.dueDate, today))
+    .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+
+  return overdue[0] || null;
 }
 
 export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

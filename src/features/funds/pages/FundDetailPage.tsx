@@ -64,7 +64,12 @@ export default function FundDetailPage() {
   // Calculate values
   const allDates = getFundPaymentDates(fund);
   const monthDates = allDates.filter(d => isSameMonth(d, viewMonth));
-  const totalInvested = fund.payments?.reduce((s, p) => s + (typeof p.amount === 'string' ? parseFloat(p.amount) : p.amount), 0) ?? 0;
+  const totalInvestedCents = fund.payments?.reduce((s, p) => {
+      const amountStr = String(p.amount || 0).replace(/,/g, '');
+      const amount = parseFloat(amountStr) || 0;
+      return s + Math.round(amount * 100);
+  }, 0) ?? 0;
+  const totalInvested = totalInvestedCents / 100;
   const totalPayments = fund.payments?.length ?? 0;
   const missed = getMissedCount(fund);
   

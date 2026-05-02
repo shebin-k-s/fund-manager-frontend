@@ -61,15 +61,25 @@ export default function DashboardPage() {
   const safeCards = cards || [];
 
   // Calculate stats
-  const totalFundInvested = safeFunds.reduce(
-    (sum, fund) => sum + fund.payments.reduce((a, p) => a + Number(p.amount), 0),
+  const totalFundInvestedCents = safeFunds.reduce(
+    (sum, fund) => sum + fund.payments.reduce((a, p) => {
+        const amountStr = String(p.amount || 0).replace(/,/g, '');
+        const amount = parseFloat(amountStr) || 0;
+        return a + Math.round(amount * 100);
+    }, 0),
     0
   );
+  const totalFundInvested = totalFundInvestedCents / 100;
 
-  const totalCardPaid = safeCards.reduce(
-    (sum, card) => sum + card.payments.reduce((a, p) => a + Number(p.amount), 0),
+  const totalCardPaidCents = safeCards.reduce(
+    (sum, card) => sum + card.payments.reduce((a, p) => {
+        const amountStr = String(p.amount || 0).replace(/,/g, '');
+        const amount = parseFloat(amountStr) || 0;
+        return a + Math.round(amount * 100);
+    }, 0),
     0
   );
+  const totalCardPaid = totalCardPaidCents / 100;
 
   // Calculate missed payments
   const missedFunds = safeFunds

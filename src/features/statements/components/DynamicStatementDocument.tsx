@@ -21,12 +21,17 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
     const statusPrefix = statusFilter === 'paid' ? 'Paid ' : statusFilter === 'overdue' ? 'Overdue ' : statusFilter === 'pending' ? 'Pending ' : '';
 
     return (
-        <div id="dynamic-statement-container" className="hidden">
-            <div className="bg-slate-900 text-slate-100 w-[794px] min-h-[1123px] overflow-hidden font-sans relative flex flex-col"
-                style={{ fontFamily: "'Inter', 'Helvetica', sans-serif" }}>
-
+        <div id="dynamic-statement-container" className="fixed left-[-9999px] top-0 z-[-1]">
+            <div
+                className="bg-slate-900 text-slate-100 w-[794px] font-sans relative flex flex-col"
+                style={{
+                    fontFamily: "'Inter', 'Helvetica', sans-serif",
+                    height: 'auto',
+                    minHeight: '1123px'
+                }}
+            >
                 {/* Top Section: Dark Fintech Header */}
-                <div className="p-12 pb-16">
+                <div className="p-12 pb-16" style={{ breakInside: 'avoid' }}>
 
                     {/* Header Top */}
                     <div className="flex justify-between items-end border-b pb-6 mb-8 border-slate-700/50">
@@ -52,7 +57,7 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
                         const endDate = dates[dates.length - 1];
 
                         return (
-                            <div className="mb-6 pt-4">
+                            <div className="mb-6 pt-4" style={{ breakInside: 'avoid' }}>
                                 <div className="grid grid-cols-2 gap-8">
                                     {/* Left side: Overview details */}
                                     <div className="space-y-4">
@@ -80,23 +85,23 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
                                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-700 pb-2">Financial Status</h3>
 
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 shadow-sm">
+                                            <div className="bg-white/5 rounded-lg p-5 border border-white/10">
                                                 <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Target Goal</p>
-                                                <p className="text-xl font-mono text-white font-bold break-words">₹{totalScheduled.toLocaleString('en-IN')}</p>
+                                                <p className="text-xl font-mono text-white font-bold">₹{totalScheduled.toLocaleString('en-IN')}</p>
                                             </div>
-                                            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 shadow-sm">
+                                            <div className="bg-white/5 rounded-lg p-5 border border-white/10">
                                                 <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Total Paid</p>
-                                                <p className="text-xl font-mono text-white font-bold break-words">₹{totalPaid.toLocaleString('en-IN')}</p>
+                                                <p className="text-xl font-mono text-white font-bold">₹{totalPaid.toLocaleString('en-IN')}</p>
                                             </div>
                                         </div>
 
-                                        <div className="bg-white/5 backdrop-blur-sm p-5 rounded-lg border border-white/10 shadow-sm">
+                                        <div className="bg-white/5 p-5 rounded-lg border border-white/10">
                                             <div className="flex justify-between items-center mb-3">
                                                 <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Progress</span>
                                                 <span className="text-sm font-bold text-white">{Math.round((totalPaid / totalScheduled) * 100)}%</span>
                                             </div>
                                             <div className="w-full bg-slate-800 rounded-full h-2">
-                                                <div className="bg-blue-400 h-2 rounded-full transition-all duration-500" style={{ width: `${Math.round((totalPaid / totalScheduled) * 100)}%` }}></div>
+                                                <div className="bg-blue-400 h-2 rounded-full" style={{ width: `${Math.round((totalPaid / totalScheduled) * 100)}%` }}></div>
                                             </div>
                                         </div>
                                     </div>
@@ -106,7 +111,7 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
                     })()}
 
                     {entityContext && filterType === 'card' && (
-                        <div className="mb-6 pt-4">
+                        <div className="mb-6 pt-4" style={{ breakInside: 'avoid' }}>
                             <div className="grid grid-cols-2 gap-8">
                                 <div className="space-y-4">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-700 pb-2">Billing Cycle Details</h3>
@@ -129,15 +134,15 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-700 pb-2">Card Performance</h3>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 shadow-sm">
+                                        <div className="bg-white/5 rounded-lg p-5 border border-white/10">
                                             <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Total Paid</p>
-                                            <p className="text-xl font-mono text-white font-bold break-words">
+                                            <p className="text-xl font-mono text-white font-bold">
                                                 ₹{((entityContext.payments || []).reduce((sum: number, p: any) => sum + p.amount, 0)).toLocaleString('en-IN')}
                                             </p>
                                         </div>
-                                        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 shadow-sm">
+                                        <div className="bg-white/5 rounded-lg p-5 border border-white/10">
                                             <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Total Cleared</p>
-                                            <p className="text-xl font-mono text-white font-bold break-words">
+                                            <p className="text-xl font-mono text-white font-bold">
                                                 {entityContext.payments?.length || 0} Cycles
                                             </p>
                                         </div>
@@ -149,20 +154,20 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
 
                     {/* Summary Area */}
                     {!entityContext && (
-                        <div className="mb-6">
-                            <div className="grid grid-cols-3 gap-6 bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10 shadow-sm relative overflow-hidden">
+                        <div className="mb-6 statement-block" style={{ breakInside: 'avoid' }}>
+                            <div className="grid grid-cols-3 gap-6 bg-white/5 p-6 rounded-xl border border-white/10 relative">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                                 <div className="flex flex-col pl-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 filter drop-shadow-sm">Total Value Captured</span>
-                                    <span className="text-3xl font-bold font-mono text-white tracking-tight break-words">₹{defaultMetrics.total.toLocaleString('en-IN')}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Value Captured</span>
+                                    <span className="text-3xl font-bold font-mono text-white">₹{defaultMetrics.total.toLocaleString('en-IN')}</span>
                                 </div>
                                 <div className="flex flex-col border-l border-slate-700 pl-6">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 filter drop-shadow-sm">Cleared / Paid Out</span>
-                                    <span className="text-3xl font-bold font-mono text-emerald-400 tracking-tight break-words">₹{defaultMetrics.paid.toLocaleString('en-IN')}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cleared / Paid Out</span>
+                                    <span className="text-3xl font-bold font-mono text-emerald-400">₹{defaultMetrics.paid.toLocaleString('en-IN')}</span>
                                 </div>
                                 <div className="flex flex-col border-l border-slate-700 pl-6">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 filter drop-shadow-sm">Overdue Deficits</span>
-                                    <span className="text-3xl font-bold font-mono text-rose-400 tracking-tight break-words">₹{defaultMetrics.overdue.toLocaleString('en-IN')}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Overdue Deficits</span>
+                                    <span className="text-3xl font-bold font-mono text-rose-400">₹{defaultMetrics.overdue.toLocaleString('en-IN')}</span>
                                 </div>
                             </div>
                         </div>
@@ -170,8 +175,8 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
 
                 </div>
 
-                {/* Bottom Section: Soft Light Transactions Table */}
-                <div className="bg-slate-50 flex-1 w-full rounded-t-[2.5rem] p-12 -mt-10 relative z-10 shadow-[0_-15px_40px_rgba(0,0,0,0.1)] text-slate-800">
+                {/* Bottom Section: Transactions Table */}
+                <div className="bg-slate-50 w-full rounded-t-[2.5rem] p-12 -mt-10 relative z-10 text-slate-800">
                     <section>
                         <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6 pb-2 flex justify-between items-end border-b-2 border-slate-200">
                             <span>Itemized Ledger Pipeline</span>
@@ -184,33 +189,43 @@ export function DynamicStatementDocument({ rows, monthLabel, filterType, statusF
                         ) : (
                             <div className="space-y-4">
                                 {rows.map((row, i) => (
-                                    <div key={i} className="flex justify-between items-center p-4 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-[0_4px_20px_rgba(59,130,246,0.1)] bg-white transition-all group">
+                                    <div
+                                        key={i}
+                                        className="flex justify-between items-center p-4 rounded-xl border border-slate-200 bg-white"
+                                        style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+                                    >
                                         <div className="flex items-center gap-5">
-                                            <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                                {i + 1}
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                                <span className="text-xs font-bold">
+                                                    {i + 1}
+                                                </span>
                                             </div>
                                             <div>
-                                                <p className="font-bold text-slate-800 text-base">{!entityContext ? row.name : <span className="capitalize">{row.type} Payment</span>}</p>
-                                                <p className="text-xs font-medium text-slate-500 mt-0.5">{row.dateLabel || format(row.dueDate, 'MMM dd, yyyy')}</p>
+                                                <p className="font-bold text-slate-800 text-base">
+                                                    {!entityContext ? row.name : <span className="capitalize">{row.type} Payment</span>}
+                                                </p>
+                                                <p className="text-xs font-medium text-slate-500 mt-0.5">
+                                                    {row.dateLabel || format(row.dueDate, 'MMM dd, yyyy')}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-6">
                                             {row.isPaid ? (
-                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-md text-[10px] uppercase tracking-widest font-bold text-emerald-600 border border-emerald-100">
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-md text-[10px] uppercase font-bold text-emerald-600 border border-emerald-100">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Paid
                                                 </div>
                                             ) : row.dueDate < new Date() ? (
-                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 rounded-md text-[10px] uppercase tracking-widest font-bold text-rose-600 border border-rose-100">
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 rounded-md text-[10px] uppercase font-bold text-rose-600 border border-rose-100">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Missed
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-md text-[10px] uppercase tracking-widest font-bold text-blue-600 border border-blue-100">
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-md text-[10px] uppercase font-bold text-blue-600 border border-blue-100">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Pending
                                                 </div>
                                             )}
 
                                             <div className="text-right w-32">
-                                                <p className="text-lg font-mono font-extrabold text-slate-900 tracking-tight">₹{row.amount.toLocaleString('en-IN')}</p>
+                                                <p className="text-lg font-mono font-extrabold text-slate-900">₹{row.amount.toLocaleString('en-IN')}</p>
                                             </div>
                                         </div>
                                     </div>

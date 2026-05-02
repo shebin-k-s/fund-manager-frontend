@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, isBefore, isAfter } from 'date-fns';
+import { format, isBefore, isAfter, startOfDay } from 'date-fns';
 import { Check, X, AlertCircle, Calendar, Clock, ChevronDown, ChevronUp, CreditCardIcon, DollarSign, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuickPayment } from './QuickPayment';
@@ -28,7 +28,7 @@ export function CardPaymentStatus({
 
   if (!card) return null;
 
-  const today = new Date();
+  const today = startOfDay(new Date());
 
   // Get cycles directly from the card data
   const cycles = getBillingCycles(card);
@@ -42,13 +42,14 @@ export function CardPaymentStatus({
 
   // Categorize unpaid cycles
   const overdueCycles = unpaidCycles.filter(c => isBefore(c.dueDate, today));
-  const upcomingCycles = unpaidCycles.filter(c => isAfter(c.dueDate, today));
+  const upcomingCycles = unpaidCycles.filter(c => !isBefore(c.dueDate, today) && !isAfter(c.billDate, today));
 
-  // Calculate totals
-  const totalPaid = card.payments?.reduce((sum, p) => {
-    const amount = typeof p.amount === 'string' ? parseFloat(p.amount) : (p.amount || 0);
-    return sum + (isNaN(amount) ? 0 : amount);
+  const totalPaidCents = card.payments?.reduce((sum, p) => {
+    const amountStr = String(p.amount || 0).replace(/,/g, '');
+    const amount = parseFloat(amountStr) || 0;
+    return sum + Math.round((isNaN(amount) ? 0 : amount) * 100);
   }, 0) || 0;
+  const totalPaid = totalPaidCents / 100;
 
   const totalCycles = cycles.length;
   const paidCount = paidCycles.length;
@@ -335,7 +336,7 @@ export function CardPaymentStatus({
       )}
 
       {/* Payment History */}
-      {paidCycles.length > 0 && (
+      {card.payments && card.payments.length > 0 && (
         <div className="space-y-2 pt-2">
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -343,7 +344,7 @@ export function CardPaymentStatus({
           >
             <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-emerald-400" />
-              Payment History ({paidCycles.length})
+              Payment History ({card.payments.length})
             </span>
             {showHistory ? (
               <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -354,49 +355,59 @@ export function CardPaymentStatus({
 
           {showHistory && (
             <div className="space-y-2 mt-2">
-              {paidCycles.slice(0, 5).map(cycle => {
-                const payment = card.payments?.find(p => p?.cycle === cycle.id);
-                const isRemoving = removingCycle === cycle.id;
+              {(() => {
+                const allPayments = [...card.payments].sort((a, b) => {
+                  if (a.cycle !== b.cycle) {
+                    return b.cycle.localeCompare(a.cycle);
+                  }
+                  const dateA = a.date ? new Date(a.date).getTime() : 0;
+                  const dateB = b.date ? new Date(b.date).getTime() : 0;
+                  return dateB - dateA;
+                });
+                
+                return allPayments.map((payment, index) => {
+                  const isRemoving = removingCycle === payment.cycle;
+                  const [py, pm] = payment.cycle.split('-');
+                  const cycleBillDate = new Date(parseInt(py), parseInt(pm) - 1, card.billDate);
 
-                return (
-                  <div
-                    key={cycle.id}
-                    className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3"
-                  >
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-4 h-4 text-emerald-400" />
+                  return (
+                    <div
+                      key={`${payment.cycle}-${index}`}
+                      className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3"
+                    >
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                              <Check className="w-4 h-4 text-emerald-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-white truncate">{format(cycleBillDate, 'MMMM yyyy')}</p>
+                              <p className="text-xs text-slate-400 truncate">
+                                Paid {payment.date ? format(new Date(payment.date), 'MMM d, yyyy') : 'Unknown'}
+                              </p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-white truncate">{format(cycle.billDate, 'MMMM yyyy')}</p>
-                            <p className="text-xs text-slate-400 truncate">
-                              Paid {payment?.date ? format(new Date(payment.date), 'MMM d, yyyy') : 'Unknown'}
-                            </p>
-                          </div>
+                          <span className="text-sm font-semibold text-emerald-400">
+                            ₹{payment.amount
+                              ? parseFloat(String(payment.amount).replace(/,/g, '')).toLocaleString('en-IN', { maximumFractionDigits: 2 })
+                              : '0'}
+                          </span>
                         </div>
-                        <span className="text-sm font-semibold text-emerald-400">
-                          ₹{payment?.amount
-                            ? (typeof payment.amount === 'string'
-                              ? parseFloat(payment.amount).toLocaleString('en-IN')
-                              : payment.amount.toLocaleString('en-IN'))
-                            : '0'}
-                        </span>
+                        <button
+                          onClick={() => handleRemovePayment(payment.cycle)}
+                          disabled={isPending || isRemoving}
+                          className="text-xs text-red-400 hover:text-red-300 self-start disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                        >
+                          {isRemoving ? (
+                            <><Loader2 className="w-3 h-3 animate-spin" /> Removing...</>
+                          ) : 'Remove payment'}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleRemovePayment(cycle.id)}
-                        disabled={isPending || isRemoving}
-                        className="text-xs text-red-400 hover:text-red-300 self-start disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                      >
-                        {isRemoving ? (
-                          <><Loader2 className="w-3 h-3 animate-spin" /> Removing...</>
-                        ) : 'Remove payment'}
-                      </button>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           )}
         </div>

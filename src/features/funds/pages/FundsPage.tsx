@@ -15,13 +15,14 @@ export default function FundsPage() {
     return sum + getMissedCount(fund);
   }, 0);
 
-  // Calculate total invested
-  const totalInvested = funds.reduce((sum, fund) => {
+  const totalInvestedCents = funds.reduce((sum, fund) => {
     return sum + (fund.payments?.reduce((s, p) => {
-      const amount = typeof p.amount === 'string' ? parseFloat(p.amount) : (p.amount || 0);
-      return s + amount;
+      const amountStr = String(p.amount || 0).replace(/,/g, '');
+      const amount = parseFloat(amountStr) || 0;
+      return s + Math.round(amount * 100);
     }, 0) || 0);
   }, 0);
+  const totalInvested = totalInvestedCents / 100;
 
   // Show error state
   if (isError) {
@@ -45,7 +46,7 @@ export default function FundsPage() {
         </div>
 
         {/* Error Message */}
-        <div className="px-4 pt-8 pb-24 max-w-lg mx-auto">
+        <div className="px-4 pt-8 max-w-lg mx-auto" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
           <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-6 h-6 text-destructive" />
@@ -118,7 +119,7 @@ export default function FundsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="px-4 pt-4 pb-24 max-w-lg mx-auto">
+      <div className="px-4 pt-4 max-w-lg mx-auto" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
         {isLoading ? (
           <FundListSkeleton />
         ) : !isError && funds.length === 0 ? (

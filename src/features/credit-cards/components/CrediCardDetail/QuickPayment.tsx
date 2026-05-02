@@ -27,7 +27,7 @@ export function QuickPayment({ cycleId, onSubmit, onCancel, isPending }: QuickPa
                     className="w-full px-3 py-3 rounded-lg bg-background border border-input focus:ring-2 focus:ring-primary text-sm"
                     autoFocus
                     min="0"
-                    step="1"
+                    step="0.01"
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !isPending) {
                             handleSubmit();

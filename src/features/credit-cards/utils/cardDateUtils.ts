@@ -44,7 +44,6 @@ function validateDate(day: number, year: number, month: number): number {
  * Gets all billing cycles for a credit card
  * Only includes cycles where bill date has occurred or is current month
  */
-// In cardDateUtils.ts - Update getBillingCycles function
 export function getBillingCycles(card: CreditCard, rangeEnd?: Date): BillingCycle[] {
   const startFrom = card.billingStartDate
     ? startOfDay(new Date(card.billingStartDate))
@@ -53,36 +52,33 @@ export function getBillingCycles(card: CreditCard, rangeEnd?: Date): BillingCycl
   const now = new Date();
   const cycles: BillingCycle[] = [];
 
-  let currentDate = startFrom;
+  let y = startFrom.getFullYear();
+  let m = startFrom.getMonth();
 
-  // Only generate cycles up to current month or provided rangeEnd
-  const endDate = rangeEnd || now;
+  // Use rangeEnd if provided, else follow backend logic of generating one month ahead
+  const endDate = rangeEnd || addMonths(now, 1);
 
-  // Generate cycles until we reach current month
-  while (isBefore(currentDate, endDate) || isSameMonth(currentDate, endDate)) {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-
-    // Validate and adjust bill/due dates based on month length
-    const billDay = validateDate(card.billDate, year, month);
-    const billDate = new Date(year, month, billDay);
+  // Generate cycles up to endDate
+  while (new Date(y, m, 1) <= endDate) {
+    const billDay = Math.min(card.billDate, getDaysInMonth(new Date(y, m)));
+    const billDate = new Date(y, m, billDay);
 
     // Calculate due date (handling month rollover)
-    let dueYear = year;
-    let dueMonth = month;
+    let dueY = y;
+    let dueM = m;
 
     if (card.dueDate <= card.billDate) {
-      dueMonth++;
-      if (dueMonth > 11) {
-        dueMonth = 0;
-        dueYear++;
+      dueM++;
+      if (dueM > 11) {
+        dueM = 0;
+        dueY++;
       }
     }
 
-    const dueDay = validateDate(card.dueDate, dueYear, dueMonth);
-    const dueDate = new Date(dueYear, dueMonth, dueDay);
+    const dueDay = Math.min(card.dueDate, getDaysInMonth(new Date(dueY, dueM)));
+    const dueDate = new Date(dueY, dueM, dueDay);
 
-    const cycleId = generateCycleId(year, month);
+    const cycleId = generateCycleId(y, m);
     // FIX: Handle case when payments is undefined
     const payment = card.payments?.find(p => p.cycle === cycleId);
 
@@ -102,7 +98,8 @@ export function getBillingCycles(card: CreditCard, rangeEnd?: Date): BillingCycl
       shortMonth: format(billDate, 'MMM yyyy'),
     });
 
-    currentDate = addMonths(currentDate, 1);
+    m++;
+    if (m > 11) { m = 0; y++; }
   }
 
   return cycles;
@@ -134,13 +131,16 @@ export function getNextUnpaidCycle(card: CreditCard): BillingCycle | null {
   const today = startOfDay(new Date());
   const cycles = getBillingCycles(card);
 
+  // Consider only cycles where bill date has arrived (matches backend logic)
+  const activeUnpaid = cycles.filter(c => !c.isPaid && !isAfter(c.billDate, today));
+
   // First try to find upcoming unpaid cycle
-  const upcoming = cycles.find(c => !c.isPaid && isAfter(c.dueDate, today));
+  const upcoming = activeUnpaid.find(c => isAfter(c.dueDate, today));
   if (upcoming) return upcoming;
 
   // Then find the oldest overdue
-  const overdue = cycles
-    .filter(c => !c.isPaid && isBefore(c.dueDate, today))
+  const overdue = activeUnpaid
+    .filter(c => isBefore(c.dueDate, today))
     .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
 
   return overdue[0] || null;
@@ -171,7 +171,7 @@ export function getOverdueCycles(card: CreditCard): BillingCycle[] {
 export function getUpcomingCycles(card: CreditCard): BillingCycle[] {
   const today = startOfDay(new Date());
   return getBillingCycles(card)
-    .filter(c => !c.isPaid && isAfter(c.dueDate, today))
+    .filter(c => !c.isPaid && isAfter(c.dueDate, today) && !isAfter(c.billDate, today))
     .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
 }
 

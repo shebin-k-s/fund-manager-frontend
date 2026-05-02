@@ -12,21 +12,9 @@ const gradients = [
     'cc-gradient-4',
 ];
 
-// Helper function to format payment amount smartly
 function formatPaymentAmount(amount: number): string {
     if (amount === 0) return '₹0';
-
-    if (amount < 1000) {
-        return `₹${amount}`;
-    } else if (amount < 100000) {
-        // Convert to thousands (K)
-        const thousands = amount / 1000;
-        return `₹${thousands.toFixed(1)}K`;
-    } else {
-        // Convert to lakhs (L)
-        const lakhs = amount / 100000;
-        return `₹${lakhs.toFixed(1)}L`;
-    }
+    return `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 interface CardVisualProps {
@@ -43,10 +31,12 @@ export function CardVisual({ card, index }: CardVisualProps) {
     const isOverdue = nextCycle ? isBefore(nextCycle.dueDate, today) : false;
 
     // Calculate total paid
-    const totalPaid = card.payments?.reduce((sum, p) => {
-        const amount = typeof p.amount === 'string' ? parseFloat(p.amount) : (p.amount || 0);
-        return sum + amount;
+    const totalPaidCents = card.payments?.reduce((sum, p) => {
+        const amountStr = String(p.amount || 0).replace(/,/g, '');
+        const amount = parseFloat(amountStr) || 0;
+        return sum + Math.round((isNaN(amount) ? 0 : amount) * 100);
     }, 0) || 0;
+    const totalPaid = totalPaidCents / 100;
 
     const paymentCount = card.payments?.length || 0;
 

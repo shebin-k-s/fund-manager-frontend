@@ -12,7 +12,12 @@ interface FundCardProps {
 export default function FundCard({ fund }: FundCardProps) {
   const navigate = useNavigate();
   const nextDate = getNextUnpaidDate(fund);
-  const totalInvested = fund.payments.reduce((s, p) => s + p.amount, 0);
+  const totalInvestedCents = fund.payments.reduce((s, p) => {
+      const amountStr = String(p.amount || 0).replace(/,/g, '');
+      const amount = parseFloat(amountStr) || 0;
+      return s + Math.round(amount * 100);
+  }, 0);
+  const totalInvested = totalInvestedCents / 100;
   const isOverdue = nextDate && isBefore(nextDate, startOfDay(new Date()));
 
   return (

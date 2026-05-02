@@ -16,12 +16,14 @@ export default function CreditCardsPage() {
   }, 0);
 
   // Calculate total paid
-  const totalPaid = cards.reduce((sum, card) => {
+  const totalPaidCents = cards.reduce((sum, card) => {
     return sum + (card.payments?.reduce((s, p) => {
-      const amount = typeof p.amount === 'string' ? parseFloat(p.amount) : (p.amount || 0);
-      return s + amount;
+      const amountStr = String(p.amount || 0).replace(/,/g, '');
+      const amount = parseFloat(amountStr) || 0;
+      return s + Math.round((isNaN(amount) ? 0 : amount) * 100);
     }, 0) || 0);
   }, 0);
+  const totalPaid = totalPaidCents / 100;
 
   // Show error state
   if (isError) {
@@ -118,7 +120,7 @@ export default function CreditCardsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="px-4 pt-8" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}>
+      <div className="px-4 pt-8" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
         {isLoading ? (
           <CardListSkeleton />
         ) : cards.length === 0 ? (
