@@ -8,7 +8,7 @@ import { getBillingCycles } from '@/features/credit-cards/utils/cardDateUtils';
 import { DynamicStatementDocument } from '../components/DynamicStatementDocument';
 import { exportStatementToPdf } from '../utils/exportToPdf';
 import { StatementRow } from '../types';
-import { addMonths, startOfMonth, endOfMonth, isWithinInterval, format } from 'date-fns';
+import { addMonths, startOfMonth, endOfMonth, isWithinInterval, isAfter, format } from 'date-fns';
 import { FileText, Filter, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Clock, LayoutList, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -155,7 +155,11 @@ export default function StatementsPage() {
             const boundary = end || now; // Cap entity views cleanly to Today
             const cycles = getBillingCycles(card, boundary);
             // Filter card billing cycles by their Bill Generation Date, not when they are Due!
-            const validCycles = start && end ? cycles.filter(c => isWithinInterval(c.billDate, { start, end })) : cycles;
+            // Also exclude cycles where billDate hasn't arrived yet — the bill hasn't been generated,
+            // so showing them as PENDING is misleading.
+            const validCycles = start && end
+                ? cycles.filter(c => isWithinInterval(c.billDate, { start, end }) && !isAfter(c.billDate, now))
+                : cycles.filter(c => !isAfter(c.billDate, now));
             validCycles.forEach(c => {
                 const prevBillDate = addMonths(c.billDate, -1);
                 // e.g. "15 Mar to 15 Apr '26 (Due 05 May)"

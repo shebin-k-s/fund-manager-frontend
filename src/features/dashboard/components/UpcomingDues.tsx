@@ -106,7 +106,7 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
               activeTab === 'cards'
-                ? 'bg-white/15 text-white shadow-sm'
+                ? 'bg-purple-600/80 text-white shadow-sm'
                 : 'text-white/40 hover:text-white/70'
             )}
           >

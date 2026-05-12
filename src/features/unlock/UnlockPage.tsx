@@ -32,10 +32,7 @@ export default function UnlockPage() {
 
             if (res.data.accessToken) {
                 localStorage.setItem("auth_token", res.data.accessToken);
-                // Small delay to ensure localStorage is set
-                setTimeout(() => {
-                    navigate("/", { replace: true });
-                }, 100);
+                navigate("/", { replace: true });
             }
         } catch (err: any) {
             console.log("Error:", err.response?.data || err.message);
