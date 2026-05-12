@@ -184,7 +184,7 @@ export default function CalendarPage() {
                 </div>
             </div>
 
-            <div className="px-4 pt-5 pb-28 max-w-lg mx-auto flex flex-col gap-5">
+            <div className="px-4 pt-5 pb-4 max-w-lg mx-auto flex flex-col gap-5">
 
                 {/* Calendar Card */}
                 <div

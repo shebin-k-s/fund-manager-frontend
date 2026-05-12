@@ -128,8 +128,7 @@
   }
 
   .page-content {
-    /* Large padding to prevent overlap with bottom navigation */
-    @apply px-5 space-y-5 pb-24;
+    @apply px-5 space-y-5 pb-4;
   }
 
   .touch-card {

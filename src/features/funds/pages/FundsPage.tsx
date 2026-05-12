@@ -46,7 +46,7 @@ export default function FundsPage() {
         </div>
 
         {/* Error Message */}
-        <div className="px-4 pt-8 max-w-lg mx-auto" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
+        <div className="px-4 pt-8 pb-4 max-w-lg mx-auto">
           <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-6 h-6 text-destructive" />
@@ -119,7 +119,7 @@ export default function FundsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="px-4 pt-4 max-w-lg mx-auto" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}>
+      <div className="px-4 pt-4 pb-4 max-w-lg mx-auto">
         {isLoading ? (
           <FundListSkeleton />
         ) : !isError && funds.length === 0 ? (

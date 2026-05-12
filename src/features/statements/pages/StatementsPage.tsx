@@ -8,8 +8,8 @@ import { getBillingCycles } from '@/features/credit-cards/utils/cardDateUtils';
 import { DynamicStatementDocument } from '../components/DynamicStatementDocument';
 import { exportStatementToPdf } from '../utils/exportToPdf';
 import { StatementRow } from '../types';
-import { addMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, format } from 'date-fns';
-import { FileText, Filter, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Clock, LayoutList, CalendarDays, ChevronDown } from 'lucide-react';
+import { addMonths, startOfMonth, endOfMonth, isWithinInterval, format } from 'date-fns';
+import { FileText, Filter, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Clock, LayoutList, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function StatementsPage() {
@@ -421,7 +421,7 @@ export default function StatementsPage() {
                 {/* List — solely scrolls within this container */}
                 <div
                     className="flex-1 overflow-y-auto min-h-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                    style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}
+                    style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
                 >                    {finalRows.length === 0 ? (
                     <div className="border border-dashed border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center mt-2">
                         <LayoutList className="w-8 h-8 text-gray-500 mb-3 opacity-50" />
