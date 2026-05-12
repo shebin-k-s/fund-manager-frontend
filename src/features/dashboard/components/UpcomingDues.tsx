@@ -45,11 +45,11 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
     }
     const deltaX = touchStartX.current - e.changedTouches[0].clientX;
     const deltaY = touchStartY.current - e.changedTouches[0].clientY;
-    
+
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
       if (deltaX > 0) switchTab('cards', 'left'); else switchTab('funds', 'right');
     }
-    
+
     touchStartX.current = null;
     touchStartY.current = null;
     enableGlobalSwipe();
@@ -66,7 +66,7 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
   };
 
   return (
-    <div 
+    <div
       className="glass-card p-5 overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -122,21 +122,6 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
             )}
           </button>
         </div>
-
-        {/* See All link */}
-        {!isLoading && (
-          <div className="self-end sm:self-auto">
-            {activeTab === 'funds' && funds.length > 0 ? (
-              <Link to="/funds" className="text-[10px] uppercase font-bold tracking-wider text-blue-300/60 hover:text-blue-300 transition-colors">
-                See All
-              </Link>
-            ) : activeTab === 'cards' && cards.length > 0 ? (
-              <Link to="/cards" className="text-[10px] uppercase font-bold tracking-wider text-white/50 hover:text-white transition-colors">
-                See All
-              </Link>
-            ) : null}
-          </div>
-        )}
       </div>
 
       {/* Content */}
