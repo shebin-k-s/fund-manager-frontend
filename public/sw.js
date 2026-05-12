@@ -96,7 +96,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'Velo', {
       body: data.body || '',
       icon: '/logo.png',
-      badge: '/logo.png',
+      badge: '/badge.svg',
       vibrate: [200, 100, 200],
       data: { url: data.url || '/' },
     })
