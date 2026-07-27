@@ -97,6 +97,14 @@ self.addEventListener('push', (event) => {
       body: data.body || '',
       icon: '/logo.png',
       badge: '/badge.svg',
+      // Each chunk gets a distinct tag so a later chunk does not replace it.
+      tag: data.tag,
+      // Cron runs reuse the same chunk tags. Make an updated chunk alert the
+      // user again instead of silently replacing yesterday's notification.
+      renotify: Boolean(data.tag),
+      // Supported desktop browsers keep each chunk visible until the user
+      // interacts with it. Mobile platforms may choose to ignore this option.
+      requireInteraction: true,
       vibrate: [200, 100, 200],
       data: { url: data.url || '/' },
     })
