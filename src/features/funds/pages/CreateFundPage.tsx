@@ -33,7 +33,7 @@ export default function CreateFundPage() {
       ...(recurrence === 'weekly' ? { dayOfWeek } : { dayOfMonth: parseInt(dayOfMonth) || 1 }),
       startDate: format(startDate!, 'yyyy-MM-dd'),
       endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
-    }, { onSuccess: () => navigate('/funds') });
+    }, { onSuccess: () => navigate('/funds', { replace: true }) });
   };
 
   return (

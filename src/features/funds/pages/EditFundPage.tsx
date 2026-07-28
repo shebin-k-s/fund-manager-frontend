@@ -77,14 +77,14 @@ export default function EditFundPage() {
       startDate: format(startDate!, 'yyyy-MM-dd'),
       endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
     }, {
-      onSuccess: () => navigate(`/funds/${fund.id}`)
+      onSuccess: () => navigate(`/funds/${fund.id}`, { replace: true })
     });
   };
 
   const handleDelete = () => {
     if (fund) {
       deleteFund.mutate(fund.id, {
-        onSuccess: () => navigate('/funds')
+        onSuccess: () => navigate('/funds', { replace: true })
       });
     }
   };

@@ -62,7 +62,7 @@ export default function EditCreditCardPage() {
         billingStartDate: format(billingStartDate!, 'yyyy-MM-dd'),
       },
       {
-        onSuccess: () => navigate(`/cards/${card.id}`),
+        onSuccess: () => navigate(`/cards/${card.id}`, { replace: true }),
       }
     );
   };
@@ -70,7 +70,7 @@ export default function EditCreditCardPage() {
   const handleDelete = () => {
     if (card) {
       deleteCardMut.mutate(card.id, {
-        onSuccess: () => navigate('/cards'),
+        onSuccess: () => navigate('/cards', { replace: true }),
       });
     }
   };

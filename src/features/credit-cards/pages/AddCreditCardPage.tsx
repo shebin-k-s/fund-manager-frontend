@@ -42,7 +42,7 @@ export default function AddCreditCardPage() {
         dueDate: parseInt(dueDate) || 15,
         billingStartDate: format(billingStartDate!, 'yyyy-MM-dd'),
       },
-      { onSuccess: () => navigate('/cards') }
+      { onSuccess: () => navigate('/cards', { replace: true }) }
     );
   };
 
