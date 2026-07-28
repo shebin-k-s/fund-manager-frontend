@@ -1,8 +1,11 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Wallet, CreditCard, CalendarDays, FileText } from 'lucide-react';
+import { LayoutDashboard, Wallet, CreditCard, CalendarDays, FileText, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SwipeGestureProvider, useSwipeGesture } from '@/context/SwipeGestureContext';
+
+const PULL_THRESHOLD = 160; // px of downward drag to trigger a refresh
+const PULL_MAX = 250;       // px cap on visible pull distance
 
 const tabs = [
   { path: '/', icon: LayoutDashboard, label: 'Home' },
@@ -40,6 +43,18 @@ function LayoutInner() {
   // Wheel cooldown to debounce rapid trackpad events
   const wheelCooldown = useRef(false);
   const wheelTimeout = useRef<any>(null);
+
+  // ─── Pull-to-refresh state ───
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pullDistanceRef = useRef(0);
+  const isRefreshingRef = useRef(false);
+  const pullStartY = useRef<number | null>(null);
+
+  const updatePullDistance = useCallback((value: number) => {
+    pullDistanceRef.current = value;
+    setPullDistance(value);
+  }, []);
 
   const prevPathname = useRef(pathname);
   if (prevPathname.current !== pathname) {
@@ -87,21 +102,51 @@ function LayoutInner() {
     lastY.current = e.touches[0].clientY;
     tracking.current = true;
     navigated.current = false;
+
+    // Only arm pull-to-refresh when starting at the top of the scroll
+    // container — otherwise this is just a normal scroll gesture.
+    const scrollEl = e.currentTarget as HTMLElement;
+    pullStartY.current = (!isRefreshingRef.current && scrollEl.scrollTop <= 1 && e.touches[0].clientY < 150)
+      ? e.touches[0].clientY
+      : null;
   }, [isGlobalSwipeEnabled]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!tracking.current || navigated.current) return;
     lastX.current = e.touches[0].clientX;
     lastY.current = e.touches[0].clientY;
+
+    if (pullStartY.current !== null) {
+      const distanceY = e.touches[0].clientY - pullStartY.current;
+      const distanceX = lastX.current - startX.current;
+      if (distanceY > 0 && distanceY > Math.abs(distanceX) * 1.5) {
+        updatePullDistance(Math.min(distanceY, PULL_MAX));
+      } else if (Math.abs(distanceX) > 30) {
+        pullStartY.current = null;
+        updatePullDistance(0);
+      }
+    }
+
     checkAndNavigate();
-  }, [checkAndNavigate]);
+  }, [checkAndNavigate, updatePullDistance]);
 
   const handleTouchEnd = useCallback(() => {
     if (!tracking.current) return;
     tracking.current = false;
+
+    if (pullStartY.current !== null) {
+      if (pullDistanceRef.current > PULL_THRESHOLD && !isRefreshingRef.current) {
+        isRefreshingRef.current = true;
+        setIsRefreshing(true);
+        window.location.reload();
+      }
+      pullStartY.current = null;
+      updatePullDistance(0);
+    }
+
     if (navigated.current) return;
     checkAndNavigate();
-  }, [checkAndNavigate]);
+  }, [checkAndNavigate, updatePullDistance]);
 
   // ─── Wheel events (desktop 2-finger trackpad swipe) ───
   // Calendar and Statements call e.stopPropagation() in their own
@@ -128,11 +173,22 @@ function LayoutInner() {
     <div className="min-h-screen w-full bg-background flex justify-center">
       <div className="w-full h-screen max-w-md relative flex flex-col bg-background/50 sm:border-x sm:border-white/5">
 
+        {/* Pull-to-refresh indicator */}
+        <div
+          className="absolute left-0 right-0 top-0 flex justify-center items-center overflow-hidden transition-all duration-300 z-20 bg-background"
+          style={{ height: pullDistance > 0 ? pullDistance : isRefreshing ? 60 : 0 }}
+        >
+          <Loader2
+            className={cn('w-6 h-6 text-muted-foreground', isRefreshing && 'animate-spin')}
+            style={{ transform: `rotate(${pullDistance * 2}deg)` }}
+          />
+        </div>
+
         {/* Main Content */}
         <div
           id="main-scroll-container"
-          className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1"
-          style={{ touchAction: 'pan-y' }}
+          className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1 transition-transform duration-200"
+          style={{ touchAction: 'pan-y', transform: `translateY(${isRefreshing ? 60 : pullDistance}px)` }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -144,9 +200,14 @@ function LayoutInner() {
         {/* Bottom Navigation */}
         <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
           <nav
-            className="bg-card/95 backdrop-blur-xl border-t border-border flex justify-between items-center px-4 pt-2 w-full max-w-md"
+            className="relative bg-card/95 backdrop-blur-xl border-t border-border flex justify-between items-center px-4 pt-2 w-full max-w-md"
             style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)', minHeight: '64px' }}
           >
+            {typeof __BUILD_TIME__ !== 'undefined' && (
+              <p className="absolute bottom-1 right-2 text-[7px] font-mono text-muted-foreground/20 pointer-events-none select-none">
+                {new Date(__BUILD_TIME__).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
             {tabs.map(tab => {
               const active = isActive(tab.path);
               return (

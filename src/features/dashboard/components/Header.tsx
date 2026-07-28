@@ -15,12 +15,15 @@ import { createPortal } from 'react-dom';
 import { useNotifications } from '@/hooks/useNotifications';
 import { exportStatementToPdf } from '@/features/statements/utils/exportToPdf';
 import { cn } from '@/lib/utils';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
+import type { FreshnessStatus } from '@/hooks/useQueryFreshness';
 
 interface DashboardHeaderProps {
     onLogout?: () => void;
+    freshness?: { status: FreshnessStatus; isFetching: boolean };
 }
 
-export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
+export function DashboardHeader({ onLogout, freshness }: DashboardHeaderProps) {
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     useEffect(() => {
@@ -71,10 +74,11 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
                         <h1 className="text-2xl font-black tracking-tight text-white leading-none">
                             Dashboard
                         </h1>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1.5 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                             Secure Session
-                        </p>
+                            {freshness && <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />}
+                        </div>
                     </div>
 
                     {/* Right controls */}

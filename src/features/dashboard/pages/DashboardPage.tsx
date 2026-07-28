@@ -16,26 +16,40 @@ import { Fund } from '@/features/funds/types';
 import { DashboardErrorState } from '../components/DashboardErrorState';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEffect } from 'react';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { checkAndNotifyDues } = useNotifications();
 
+  const fundsQuery = useFundsQuery();
   const {
     data: funds,
     isLoading: fundsLoading,
     error: fundsError,
     isError: fundsIsError,
     refetch: refetchFunds
-  } = useFundsQuery();
+  } = fundsQuery;
 
+  const cardsQuery = useCardsQuery();
   const {
     data: cards,
     isLoading: cardsLoading,
     error: cardsError,
     isError: cardsIsError,
     refetch: refetchCards
-  } = useCardsQuery();
+  } = cardsQuery;
+
+  const fundsFreshness = useQueryFreshness(fundsQuery);
+  const cardsFreshness = useQueryFreshness(cardsQuery);
+  const freshness = {
+    status: (fundsFreshness.status === 'error' || cardsFreshness.status === 'error')
+      ? 'error' as const
+      : (fundsFreshness.isFetching || cardsFreshness.isFetching)
+        ? 'loading' as const
+        : 'fresh' as const,
+    isFetching: fundsFreshness.isFetching || cardsFreshness.isFetching,
+  };
 
   const today = startOfDay(new Date());
 
@@ -130,7 +144,7 @@ export default function DashboardPage() {
   if (hasError) {
     return (
       <div className="animate-fade-in">
-        <DashboardHeader onLogout={handleLogout} />
+        <DashboardHeader onLogout={handleLogout} freshness={freshness} />
         <div className="page-content mt-4">
           <DashboardErrorState
             error={fundsError || cardsError}
@@ -146,7 +160,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="animate-fade-in">
-        <DashboardHeader onLogout={handleLogout} />
+        <DashboardHeader onLogout={handleLogout} freshness={freshness} />
         <div className="page-content mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             {[1, 2].map(i => (
@@ -187,7 +201,7 @@ export default function DashboardPage() {
   if (isEmpty) {
     return (
       <div className="animate-fade-in">
-        <DashboardHeader onLogout={handleLogout} />
+        <DashboardHeader onLogout={handleLogout} freshness={freshness} />
         <DashboardEmptyState />
       </div>
     );
@@ -195,7 +209,7 @@ export default function DashboardPage() {
 
   return (
     <div className="animate-fade-in">
-      <DashboardHeader onLogout={handleLogout} />
+      <DashboardHeader onLogout={handleLogout} freshness={freshness} />
 
       <div className="page-content mt-4">
         <MissedPaymentsSection

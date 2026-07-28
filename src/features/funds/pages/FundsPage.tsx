@@ -6,9 +6,13 @@ import FundListSkeleton from '../components/FundListSkeleton';
 import EmptyState from '@/components/EmptyState';
 import { getMissedCount } from '../utils/fundDateUtils';
 import { cn } from '@/lib/utils';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
 
 export default function FundsPage() {
-  const { data: funds = [], isLoading, error, isError, refetch } = useFundsQuery();
+  const fundsQuery = useFundsQuery();
+  const { data: funds = [], isLoading, error, isError, refetch } = fundsQuery;
+  const freshness = useQueryFreshness(fundsQuery);
 
   // Calculate total missed across all funds
   const totalMissed = funds.reduce((sum, fund) => {
@@ -73,7 +77,10 @@ export default function FundsPage() {
       <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <h1 className="text-xl font-bold">Funds</h1>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              Funds
+              {!isLoading && <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />}
+            </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               {isLoading ? 'Loading...' : `${funds.length} active fund${funds.length !== 1 ? 's' : ''}`}
             </p>

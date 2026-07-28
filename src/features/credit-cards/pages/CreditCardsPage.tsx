@@ -6,9 +6,13 @@ import EmptyState from '@/components/EmptyState';
 import { CardVisual } from '../components/CrediCardDetail/CardVisual';
 import { getMissedCardCount } from '../utils/cardDateUtils';
 import { cn } from '@/lib/utils';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
 
 export default function CreditCardsPage() {
-  const { data: cards = [], isLoading, error, isError, refetch } = useCardsQuery();
+  const cardsQuery = useCardsQuery();
+  const { data: cards = [], isLoading, error, isError, refetch } = cardsQuery;
+  const freshness = useQueryFreshness(cardsQuery);
 
   // Calculate total overdue across all cards
   const totalOverdue = cards.reduce((sum, card) => {
@@ -74,7 +78,10 @@ export default function CreditCardsPage() {
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold">Credit Cards</h1>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              Credit Cards
+              {!isLoading && <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />}
+            </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               {isLoading ? 'Loading...' : `${cards.length} card${cards.length !== 1 ? 's' : ''}`}
             </p>
