@@ -13,11 +13,6 @@ export function useNotifications() {
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
-      if (result === 'granted') {
-        toast.success("Notifications enabled!");
-      } else if (result === 'denied') {
-        toast.error("Notifications were denied. Please enable them in your browser settings.");
-      }
     } catch (error) {
       console.error("Error requesting notification permission:", error);
     }
@@ -111,7 +106,6 @@ export function useNotifications() {
       console.log("Push subscription successful! 🎉");
     } catch (error: any) {
       console.error("Error subscribing to push:", error);
-      toast.error(`Push Error: ${error.message || 'Unknown error'}`);
     }
   }, [permission]);
 
