@@ -1,7 +1,9 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, defaultShouldDehydrateQuery } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "@/components/Layout";
@@ -22,10 +24,37 @@ import UnlockPage from "./features/unlock/UnlockPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/publicRoute";
 
-const queryClient = new QueryClient();
+const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // Keep cache for 7 days
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 60_000,
+      gcTime: CACHE_MAX_AGE,
+    },
+  },
+});
+
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+});
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{
+      persister,
+      maxAge: CACHE_MAX_AGE,
+      dehydrateOptions: {
+        // Keep queries that still have data even if the last background
+        // revalidation errored (e.g. offline) — otherwise a failed refetch
+        // wipes that query from localStorage on the next persist save.
+        shouldDehydrateQuery: (query) =>
+          defaultShouldDehydrateQuery(query) || query.state.data !== undefined,
+      },
+    }}
+  >
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -65,7 +94,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
 );
 
 export default App;
