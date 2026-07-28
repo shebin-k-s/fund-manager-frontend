@@ -117,3 +117,42 @@ self.addEventListener('notificationclick', (event) => {
     clients.openWindow(event.notification.data?.url || '/')
   );
 });
+
+// ---- Push subscription renewal ------------------------------
+// Browsers can silently rotate/expire a push subscription in the
+// background (independent of anything the page does). Without this,
+// that leaves the server holding a dead endpoint until the user
+// happens to reopen the app.
+const VAPID_PUBLIC_KEY = 'BGdj8vtp8XO598GJ8HDwzt7IdQls4xvEoBYcj0eD3_vqkFMA-MtWuoEUwniGV5Lr50dOkUdzPMWIpG4siSWGIhk';
+const API_BASE_URL = 'https://fund-manager-backend-1wb8.onrender.com/api/v1';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      const applicationServerKey = event.oldSubscription?.options?.applicationServerKey
+        || urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+
+      const newSubscription = await self.registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey,
+      });
+
+      await fetch(`${API_BASE_URL}/notifications/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSubscription),
+      });
+    })()
+  );
+});

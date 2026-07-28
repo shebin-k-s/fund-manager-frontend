@@ -92,19 +92,18 @@ export function useNotifications() {
       console.info("Found VAPID public key.");
 
       console.info("Requesting push subscription from browser...");
-      
-      // Clear existing subscription first (fixes many "push service errors")
-      const existingSub = await registration.pushManager.getSubscription();
-      if (existingSub) {
-        console.info("Found existing subscription, clearing it first...");
-        await existingSub.unsubscribe();
-      }
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
-      });
-      console.info("Push subscription object generated:", subscription);
+      let subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        console.info("Reusing existing push subscription.");
+      } else {
+        console.info("No existing subscription, creating a new one...");
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+      }
+      console.info("Push subscription object:", subscription);
 
       console.info("Sending subscription to backend...");
       const response = await apiClient.post('/notifications/subscribe', subscription);
