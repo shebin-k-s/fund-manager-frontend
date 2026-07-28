@@ -28,8 +28,9 @@ export default function FundsPage() {
   }, 0);
   const totalInvested = totalInvestedCents / 100;
 
-  // Show error state
-  if (isError) {
+  // Only show the full error screen when there's nothing cached to fall
+  // back on — otherwise keep showing the cached list with the red dot.
+  if (isError && funds.length === 0) {
     return (
       <div className="animate-fade-in bg-background">
         {/* Sticky Header */}
@@ -95,7 +96,7 @@ export default function FundsPage() {
         </div>
 
         {/* Summary Stats - Only show if funds exist */}
-        {!isLoading && !isError && funds.length > 0 && (
+        {!isLoading && funds.length > 0 && (
           <div className="px-4 pb-3 grid grid-cols-3 gap-2 max-w-lg mx-auto">
             <div className="bg-card rounded-lg p-2 border border-border">
               <p className="text-[10px] text-muted-foreground">Funds</p>
@@ -129,7 +130,7 @@ export default function FundsPage() {
       <div className="px-4 pt-4 pb-4 max-w-lg mx-auto">
         {isLoading ? (
           <FundListSkeleton />
-        ) : !isError && funds.length === 0 ? (
+        ) : funds.length === 0 ? (
           <div className="pt-8">
             <EmptyState
               icon={Wallet}
@@ -145,7 +146,7 @@ export default function FundsPage() {
               }
             />
           </div>
-        ) : !isError && funds.length > 0 ? (
+        ) : funds.length > 0 ? (
           <div className="space-y-3">
             {funds.map((fund) => {
               const fundMissed = getMissedCount(fund) > 0;

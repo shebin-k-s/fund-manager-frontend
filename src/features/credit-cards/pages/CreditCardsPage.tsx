@@ -29,8 +29,9 @@ export default function CreditCardsPage() {
   }, 0);
   const totalPaid = totalPaidCents / 100;
 
-  // Show error state
-  if (isError) {
+  // Only show the full error screen when there's nothing cached to fall
+  // back on — otherwise keep showing the cached list with the red dot.
+  if (isError && cards.length === 0) {
     return (
       <div className="animate-fade-in bg-background">
         {/* Sticky Header */}

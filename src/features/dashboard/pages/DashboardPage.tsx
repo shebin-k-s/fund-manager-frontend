@@ -60,7 +60,9 @@ export default function DashboardPage() {
 
     navigate("/unlock", { replace: true });
   };
-  const hasError = fundsIsError || cardsIsError;
+  // Only show the full error screen when there's nothing cached to fall
+  // back on — otherwise keep showing the cached dashboard with the red dot.
+  const hasError = (fundsIsError && !funds?.length) || (cardsIsError && !cards?.length);
 
   const handleRetry = () => {
     if (fundsIsError) refetchFunds();
