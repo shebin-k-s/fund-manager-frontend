@@ -11,12 +11,27 @@ import { StatementRow } from '../types';
 import { addMonths, startOfMonth, endOfMonth, isWithinInterval, isAfter, format } from 'date-fns';
 import { FileText, Filter, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Clock, LayoutList, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
 
 export default function StatementsPage() {
     const navigate = useNavigate();
     const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
-    const { data: funds = [] } = useFundsQuery();
-    const { data: cards = [] } = useCardsQuery();
+    const fundsQuery = useFundsQuery();
+    const cardsQuery = useCardsQuery();
+    const { data: funds = [] } = fundsQuery;
+    const { data: cards = [] } = cardsQuery;
+
+    const fundsFreshness = useQueryFreshness(fundsQuery);
+    const cardsFreshness = useQueryFreshness(cardsQuery);
+    const freshness = {
+        status: (fundsFreshness.status === 'error' || cardsFreshness.status === 'error')
+            ? 'error' as const
+            : (fundsFreshness.isFetching || cardsFreshness.isFetching)
+                ? 'loading' as const
+                : 'fresh' as const,
+        isFetching: fundsFreshness.isFetching || cardsFreshness.isFetching,
+    };
 
     const [viewMode, setViewMode] = useState<'month' | 'entity'>('month');
     const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
@@ -222,6 +237,7 @@ export default function StatementsPage() {
                         <h1 className="text-xl font-bold flex items-center gap-2">
                             <FileText className="w-5 h-5 text-emerald-400" />
                             Statements
+                            <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />
                         </h1>
                         <p className="text-xs text-muted-foreground mt-0.5 tracking-wider uppercase font-semibold">Advanced Reporting</p>
                     </div>

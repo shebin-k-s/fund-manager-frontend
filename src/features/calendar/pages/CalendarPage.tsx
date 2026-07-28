@@ -9,6 +9,8 @@ import { addMonths, subMonths, startOfDay, format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Landmark, CreditCard, CheckCircle2, Clock, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSwipeGesture } from '@/context/SwipeGestureContext';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
 
 export default function CalendarPage() {
     const navigate = useNavigate();
@@ -70,8 +72,21 @@ export default function CalendarPage() {
     }, [goNextMonth, goPrevMonth]);
 
 
-    const { data: funds = [] } = useFundsQuery();
-    const { data: cards = [] } = useCardsQuery();
+    const fundsQuery = useFundsQuery();
+    const cardsQuery = useCardsQuery();
+    const { data: funds = [] } = fundsQuery;
+    const { data: cards = [] } = cardsQuery;
+
+    const fundsFreshness = useQueryFreshness(fundsQuery);
+    const cardsFreshness = useQueryFreshness(cardsQuery);
+    const freshness = {
+        status: (fundsFreshness.status === 'error' || cardsFreshness.status === 'error')
+            ? 'error' as const
+            : (fundsFreshness.isFetching || cardsFreshness.isFetching)
+                ? 'loading' as const
+                : 'fresh' as const,
+        isFetching: fundsFreshness.isFetching || cardsFreshness.isFetching,
+    };
 
     const dueMap = useMemo(() => {
         const map: Record<string, any[]> = {};
@@ -175,7 +190,10 @@ export default function CalendarPage() {
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-white/10 shadow-sm">
                 <div className="px-5 pt-5 pb-4 flex items-center justify-between max-w-lg mx-auto">
                     <div>
-                        <h1 className="text-xl font-bold text-white">Calendar</h1>
+                        <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                            Calendar
+                            <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />
+                        </h1>
                         <p className="text-xs text-muted-foreground mt-0.5 tracking-wider uppercase font-semibold">
                             Payment Schedule
                         </p>
