@@ -5,6 +5,7 @@
 // ============================================================
 
 const CACHE_NAME = 'velo-cache-v1';
+const API_BASE_URL = 'https://fund-manager-backend-1wb8.onrender.com/api/v1';
 
 // ---- Install: pre-cache the app shell ----------------------
 self.addEventListener('install', (event) => {
@@ -107,6 +108,15 @@ self.addEventListener('push', (event) => {
       requireInteraction: true,
       vibrate: [200, 100, 200],
       data: { url: data.url || '/' },
+    }).then(() => self.registration.pushManager.getSubscription()).then((subscription) => {
+      // Real delivery confirmation — /trigger's "sent" count only means the
+      // push service accepted the request, not that this device showed it.
+      if (!subscription) return;
+      return fetch(`${API_BASE_URL}/notifications/confirm-delivery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      }).catch(() => {}); // best-effort; a failed confirm shouldn't fail push handling
     })
   );
 });
@@ -124,7 +134,6 @@ self.addEventListener('notificationclick', (event) => {
 // that leaves the server holding a dead endpoint until the user
 // happens to reopen the app.
 const VAPID_PUBLIC_KEY = 'BGdj8vtp8XO598GJ8HDwzt7IdQls4xvEoBYcj0eD3_vqkFMA-MtWuoEUwniGV5Lr50dOkUdzPMWIpG4siSWGIhk';
-const API_BASE_URL = 'https://fund-manager-backend-1wb8.onrender.com/api/v1';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
