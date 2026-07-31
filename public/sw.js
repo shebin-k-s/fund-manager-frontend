@@ -115,7 +115,7 @@ self.addEventListener('push', (event) => {
       return fetch(`${API_BASE_URL}/notifications/confirm-delivery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: subscription.endpoint }),
+        body: JSON.stringify({ endpoint: subscription.endpoint, tag: data.tag }),
       }).catch(() => {}); // best-effort; a failed confirm shouldn't fail push handling
     })
   );
