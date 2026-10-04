@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/apiClient';
 
+// Guards the dead-subscription replacement so it can't loop within a launch
+let resubscribedThisSession = false;
+
 export function useNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>(
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
@@ -101,8 +104,24 @@ export function useNotifications() {
       console.info("Push subscription object:", subscription);
 
       console.info("Sending subscription to backend...");
-      const response = await apiClient.post('/notifications/subscribe', subscription);
+      const response = await apiClient.post('/notifications/subscribe', subscription.toJSON());
       console.info("Backend response:", response.data);
+
+      // The backend saw this subscription miss all of its last deliveries —
+      // it died silently (push service still accepts, device gets nothing).
+      // Replace it with a fresh one; at most once per app launch.
+      if (response.data?.resubscribe && !resubscribedThisSession) {
+        resubscribedThisSession = true;
+        console.warn("Subscription is no longer delivering, creating a fresh one...");
+        const oldEndpoint = subscription.endpoint;
+        await subscription.unsubscribe();
+        const fresh = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+        await apiClient.post('/notifications/subscribe', { ...fresh.toJSON(), replaces: oldEndpoint });
+        console.info("Replaced dead push subscription.");
+      }
       console.log("Push subscription successful! 🎉");
     } catch (error: any) {
       console.error("Error subscribing to push:", error);
