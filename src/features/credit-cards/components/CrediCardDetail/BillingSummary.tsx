@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, isBefore, isAfter, startOfDay, differenceInCalendarDays, addDays, getDaysInMonth } from 'date-fns';
+import { format, isBefore, isAfter, startOfDay, differenceInCalendarDays, subDays, getDaysInMonth } from 'date-fns';
 import { Check, AlertCircle, Clock, ChevronDown, CreditCardIcon, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuickPayment } from './QuickPayment';
@@ -392,14 +392,15 @@ function formatRupees(value: number): string {
   });
 }
 
-// Statement period a cycle covers: the day after last month's bill date up
-// to this month's bill date, e.g. "Jul 13 – Aug 12" (year added when not this year)
+// Statement period a cycle covers. The bill is generated in the morning of
+// the bill date, so that day already belongs to the next cycle: bill date 12
+// → "Jul 12 – Aug 11" (year added when not this year)
 function cyclePeriod(cycleId: string, billDay: number, withYear = true): string {
   const [y, m] = cycleId.split('-').map(Number);
   const billOn = (year: number, month: number) =>
     new Date(year, month, Math.min(billDay, getDaysInMonth(new Date(year, month))));
-  const end = billOn(y, m - 1);
-  const start = addDays(billOn(y, m - 2), 1);
+  const start = billOn(y, m - 2);
+  const end = subDays(billOn(y, m - 1), 1);
   const thisYear = new Date().getFullYear();
 
   if (!withYear || (end.getFullYear() === thisYear && start.getFullYear() === thisYear)) {
