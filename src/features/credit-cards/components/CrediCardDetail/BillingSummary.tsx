@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, isBefore, isAfter, startOfDay, differenceInCalendarDays } from 'date-fns';
+import { format, isBefore, isAfter, startOfDay, differenceInCalendarDays, addDays, getDaysInMonth } from 'date-fns';
 import { Check, AlertCircle, Clock, ChevronDown, CreditCardIcon, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuickPayment } from './QuickPayment';
@@ -118,9 +118,9 @@ export function CardPaymentStatus({
               <div key={cycle.id} className="px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{format(cycle.billDate, 'MMM yyyy')} bill</p>
+                    <p className="text-sm font-medium text-white">{cyclePeriod(cycle.cycle, card.billDate)}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Due {format(cycle.dueDate, 'd MMM')}
+                      Due {format(cycle.dueDate, 'MMM d')}
                       <span> · </span>
                       <span className={isOverdue ? 'text-red-400' : days === 0 ? 'text-amber-400' : 'text-blue-400'}>
                         {status}
@@ -283,6 +283,14 @@ export function CardPaymentStatus({
           const dateB = b.date ? new Date(b.date).getTime() : 0;
           return dateB - dateA;
         });
+        // Group by the year of the bill (the cycle's year)
+        const historyByYear: Array<{ year: string; payments: typeof history }> = [];
+        for (const p of history) {
+          const year = p.cycle.slice(0, 4);
+          const group = historyByYear[historyByYear.length - 1];
+          if (group?.year === year) group.payments.push(p);
+          else historyByYear.push({ year, payments: [p] });
+        }
         const totalHistoryPaid = history.reduce(
           (sum, p) => sum + (parseFloat(String(p.amount || 0).replace(/,/g, '')) || 0),
           0
@@ -308,47 +316,53 @@ export function CardPaymentStatus({
             </button>
 
             {showHistory && (
-              <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-white/5 shadow-md overflow-hidden divide-y divide-white/5">
-                {history.map((payment, index) => {
-                  const isRemoving = removingCycle === payment.cycle;
-                  const [py, pm] = payment.cycle.split('-').map(Number);
-                  const paidOn = payment.date ? new Date(payment.date) : null;
-                  const due = dueByCycle.get(payment.cycle);
-                  const daysLate = paidOn && due ? differenceInCalendarDays(paidOn, due) : null;
-                  const amount = parseFloat(String(payment.amount || 0).replace(/,/g, '')) || 0;
+              <div className="space-y-3">
+                {historyByYear.map(({ year, payments }) => (
+                  <div key={year} className="space-y-1.5">
+                    <p className="text-[11px] font-semibold text-muted-foreground px-1">{year}</p>
+                    <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-white/5 shadow-md overflow-hidden divide-y divide-white/5">
+                      {payments.map((payment, index) => {
+                        const isRemoving = removingCycle === payment.cycle;
+                        const paidOn = payment.date ? new Date(payment.date) : null;
+                        const due = dueByCycle.get(payment.cycle);
+                        const daysLate = paidOn && due ? differenceInCalendarDays(paidOn, due) : null;
+                        const amount = parseFloat(String(payment.amount || 0).replace(/,/g, '')) || 0;
 
-                  return (
-                    <div key={`${payment.cycle}-${index}`} className="flex items-center gap-3 px-4 py-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white">
-                          {format(new Date(py, pm - 1), 'MMM yyyy')} bill
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {paidOn ? `Paid ${format(paidOn, 'd MMM')}` : 'Paid'}
-                          {daysLate !== null && (
-                            <>
-                              <span> · </span>
-                              <span className={daysLate > 0 ? 'text-amber-400' : 'text-emerald-400'}>
-                                {daysLate > 0 ? `${daysLate} day${daysLate !== 1 ? 's' : ''} late` : 'On time'}
-                              </span>
-                            </>
-                          )}
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-white tabular-nums">
-                        ₹{formatRupees(amount)}
-                      </p>
-                      <button
-                        onClick={() => setConfirmCycle(payment.cycle)}
-                        disabled={isPending || isRemoving}
-                        className="w-8 h-8 -mr-1.5 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                        title="Remove payment"
-                      >
-                        {isRemoving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                      </button>
+                        return (
+                          <div key={`${payment.cycle}-${index}`} className="flex items-center gap-3 px-4 py-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-white">
+                                {cyclePeriod(payment.cycle, card.billDate, false)}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {paidOn ? `Paid ${format(paidOn, 'MMM d')}` : 'Paid'}
+                                {daysLate !== null && (
+                                  <>
+                                    <span> · </span>
+                                    <span className={daysLate > 0 ? 'text-amber-400' : 'text-emerald-400'}>
+                                      {paidVsDue(daysLate)}
+                                    </span>
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                            <p className="text-sm font-semibold text-white tabular-nums">
+                              ₹{formatRupees(amount)}
+                            </p>
+                            <button
+                              onClick={() => setConfirmCycle(payment.cycle)}
+                              disabled={isPending || isRemoving}
+                              className="w-8 h-8 -mr-1.5 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                              title="Remove payment"
+                            >
+                              {isRemoving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -360,7 +374,7 @@ export function CardPaymentStatus({
         onConfirm={() => confirmCycle && handleRemovePayment(confirmCycle)}
         isPending={removingCycle !== null}
         title="Remove this payment?"
-        description={confirmCycle && `The ${formatCycle(confirmCycle)} bill will be marked as unpaid again.`}
+        description={confirmCycle && `The ${cyclePeriod(confirmCycle, card.billDate)} bill will be marked as unpaid again.`}
         confirmLabel="Remove"
         pendingLabel="Removing..."
       />
@@ -368,10 +382,6 @@ export function CardPaymentStatus({
   );
 }
 
-function formatCycle(cycleId: string): string {
-  const [y, m] = cycleId.split('-').map(Number);
-  return format(new Date(y, m - 1), 'MMMM yyyy');
-}
 
 // Whole rupees without decimals, otherwise always 2 places (₹12,340.50)
 function formatRupees(value: number): string {
@@ -380,4 +390,28 @@ function formatRupees(value: number): string {
     minimumFractionDigits: hasPaise ? 2 : 0,
     maximumFractionDigits: 2,
   });
+}
+
+// Statement period a cycle covers: the day after last month's bill date up
+// to this month's bill date, e.g. "Jul 13 – Aug 12" (year added when not this year)
+function cyclePeriod(cycleId: string, billDay: number, withYear = true): string {
+  const [y, m] = cycleId.split('-').map(Number);
+  const billOn = (year: number, month: number) =>
+    new Date(year, month, Math.min(billDay, getDaysInMonth(new Date(year, month))));
+  const end = billOn(y, m - 1);
+  const start = addDays(billOn(y, m - 2), 1);
+  const thisYear = new Date().getFullYear();
+
+  if (!withYear || (end.getFullYear() === thisYear && start.getFullYear() === thisYear)) {
+    return `${format(start, 'MMM d')} – ${format(end, 'MMM d')}`;
+  }
+  return start.getFullYear() === end.getFullYear()
+    ? `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`
+    : `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
+}
+
+function paidVsDue(daysLate: number): string {
+  if (daysLate > 0) return `${daysLate} day${daysLate !== 1 ? 's' : ''} late`;
+  if (daysLate === 0) return 'on due date';
+  return `${-daysLate} day${daysLate !== -1 ? 's' : ''} early`;
 }
