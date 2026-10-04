@@ -27,11 +27,6 @@ export function QuickPayment({ cycleId, onSubmit, onCancel, isPending }: QuickPa
                     placeholder="0"
                     autoFocus
                     className="text-base font-semibold"
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !isPending) {
-                            handleSubmit();
-                        }
-                    }}
                 />
                 <p className="text-[11px] text-muted-foreground mt-1.5">
                     Enter 0 if no payment was due
