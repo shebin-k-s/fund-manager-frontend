@@ -10,7 +10,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface CardPaymentStatusProps {
   card: CreditCard;
-  onPay: (cycle: string, amount: number) => Promise<void> | void;
+  onPay: (cycle: string, amount: number, paidAt?: string) => Promise<void> | void;
   onRemove: (cycle: string) => Promise<void> | void;
   isPending?: boolean;
 }
@@ -58,8 +58,8 @@ export function CardPaymentStatus({
   const overdueCount = overdueCycles.length;
   const upcomingCount = upcomingCycles.length;
 
-  const handlePaySubmit = async (cycleId: string, amount: number) => {
-    await onPay(cycleId, amount);
+  const handlePaySubmit = async (cycleId: string, amount: number, paidAt?: string) => {
+    await onPay(cycleId, amount, paidAt);
     setPayingCycle(null);
   };
 
@@ -147,7 +147,7 @@ export function CardPaymentStatus({
                   <div className="mt-3">
                     <QuickPayment
                       cycleId={cycle.id}
-                      onSubmit={(amount) => handlePaySubmit(cycle.id, amount)}
+                      onSubmit={(amount, paidAt) => handlePaySubmit(cycle.id, amount, paidAt)}
                       onCancel={handleCancelPayment}
                       isPending={isPending}
                     />

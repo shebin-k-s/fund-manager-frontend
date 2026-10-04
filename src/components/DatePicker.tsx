@@ -9,9 +9,10 @@ interface DatePickerProps {
     value?: Date;
     onChange: (date?: Date) => void;
     placeholder?: string;
+    maxDate?: Date;
 }
 
-export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder, maxDate }: DatePickerProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -32,6 +33,8 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
                 <Calendar
                     mode="single"
                     selected={value}
+                    defaultMonth={value}
+                    disabled={maxDate ? { after: maxDate } : undefined}
                     onSelect={(date) => {
                         onChange(date);
                         setOpen(false); 

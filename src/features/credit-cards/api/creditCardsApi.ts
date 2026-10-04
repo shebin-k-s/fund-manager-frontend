@@ -19,8 +19,8 @@ export const creditCardsApi = {
   delete: (id: string) =>
     apiClient.delete(`${CARDS_URL}/${id}`).then(res => res.data),
 
-  markPaid: ({ cardId, cycle, amount }: CardPaymentPayload) =>
-    apiClient.post<CreditCard>(`${CARDS_URL}/${cardId}/payments`, { cycle, amount }).then(res => res.data),
+  markPaid: ({ cardId, cycle, amount, date }: CardPaymentPayload) =>
+    apiClient.post<CreditCard>(`${CARDS_URL}/${cardId}/payments`, { cycle, amount, date }).then(res => res.data),
 
   removePaid: ({ cardId, cycle }: { cardId: string; cycle: string }) =>
     apiClient.delete<CreditCard>(`${CARDS_URL}/${cardId}/payments/${cycle}`).then(res => res.data),

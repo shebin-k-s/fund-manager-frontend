@@ -1,20 +1,29 @@
 import { useState } from 'react';
+import { isToday } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { AmountInput } from '@/components/AmountInput';
+import { DatePicker } from '@/components/DatePicker';
 
 interface QuickPaymentProps {
     cycleId: string;
-    onSubmit: (amount: number) => void;
+    onSubmit: (amount: number, paidAt?: string) => void;
     onCancel: () => void;
     isPending?: boolean;
 }
 
 export function QuickPayment({ cycleId, onSubmit, onCancel, isPending }: QuickPaymentProps) {
     const [amount, setAmount] = useState<string>('');
+    const [paidOn, setPaidOn] = useState<Date | undefined>(new Date());
 
     const handleSubmit = () => {
         const numAmount = parseFloat(amount) || 0;
-        onSubmit(numAmount);
+        // Today → let the server stamp the time; a past day → midday, so the
+        // timezone can't shift it to another date
+        const day = paidOn ?? new Date();
+        const paidAt = isToday(day)
+            ? undefined
+            : new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12).toISOString();
+        onSubmit(numAmount, paidAt);
     };
 
     return (
@@ -31,6 +40,11 @@ export function QuickPayment({ cycleId, onSubmit, onCancel, isPending }: QuickPa
                 <p className="text-[11px] text-muted-foreground mt-1.5">
                     Enter 0 if no payment was due
                 </p>
+            </div>
+
+            <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Paid on</label>
+                <DatePicker value={paidOn} onChange={setPaidOn} maxDate={new Date()} />
             </div>
 
             <div className="flex gap-2.5">

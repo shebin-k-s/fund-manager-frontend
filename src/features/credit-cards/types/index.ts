@@ -23,6 +23,7 @@ export interface CardPaymentPayload {
   cardId: string;
   cycle: string;
   amount: number;
+  date?: string; // ISO timestamp the bill was paid
 }
 
 // types.ts

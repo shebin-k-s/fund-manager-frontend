@@ -22,9 +22,9 @@ export default function CreditCardDetailPage() {
     return <Navigate to="/cards" replace />;
   }
 
-  const handlePay = async (cycle: string, amount: number) => {
+  const handlePay = async (cycle: string, amount: number, date?: string) => {
     if (card) {
-      await markPaid.mutateAsync({ cardId: card.id, cycle, amount });
+      await markPaid.mutateAsync({ cardId: card.id, cycle, amount, date });
     }
   };
 
