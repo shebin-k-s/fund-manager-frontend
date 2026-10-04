@@ -13,7 +13,7 @@ export default function EditCreditCardPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: card, isLoading } = useCardById(id ?? '');
+  const { data: card, isPending: isLoading } = useCardById(id ?? '');
   const updateCardMut = useUpdateCard();
   const deleteCardMut = useDeleteCard();
 

@@ -17,7 +17,7 @@ export default function EditFundPage() {
   const navigate = useNavigate();
 
   // Use React Query hooks instead of useAppSelector
-  const { data: fund, isLoading } = useFundById(id!);
+  const { data: fund, isPending: isLoading } = useFundById(id!);
   const updateFund = useUpdateFund();
   const deleteFund = useDeleteFund();
 

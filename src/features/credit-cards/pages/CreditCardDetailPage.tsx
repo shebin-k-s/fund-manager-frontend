@@ -11,9 +11,10 @@ export default function CreditCardDetailPage() {
   const navigate = useNavigate();
 
   const cardQuery = useCardById(id!);
-  const { data: card, isPaused } = cardQuery;
-  // Treat a paused (offline) fetch with nothing cached as still loading
-  const isLoading = cardQuery.isLoading || (isPaused && !card);
+  const { data: card } = cardQuery;
+  // Pending until the query settles — covers cache restore after a refresh and
+  // a paused (offline) fetch, so we don't redirect before the card arrives
+  const isLoading = cardQuery.isPending;
   const freshness = useQueryFreshness(cardQuery);
   const markPaid = useMarkCardPaid();
   const removePayment = useRemoveCardPayment();

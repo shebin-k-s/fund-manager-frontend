@@ -21,7 +21,7 @@ export default function FundDetailPage() {
   const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
 
   const fundQuery = useFundById(id!);
-  const { data: fund, isLoading, isPaused } = fundQuery;
+  const { data: fund, isPending: isFundPending } = fundQuery;
   const freshness = useQueryFreshness(fundQuery);
   const markPaid = useMarkFundPaid();
   const removePayment = useRemoveFundPayment();
@@ -34,8 +34,9 @@ export default function FundDetailPage() {
   const touchStartY = useRef<number | null>(null);
   const scrollCooldown = useRef(false);
 
-  // Show loading state (also while offline with nothing cached yet)
-  if (isLoading || (isPaused && !fund)) {
+  // Pending until the query settles — covers cache restore after a refresh and
+  // a paused (offline) fetch, so we don't redirect before the fund arrives
+  if (isFundPending) {
     return (
       <div className="animate-fade-in">
         <div className="page-header flex items-center gap-3">
