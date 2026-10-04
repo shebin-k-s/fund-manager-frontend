@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { AmountInput } from '@/components/AmountInput';
 
 interface QuickPaymentProps {
     cycleId: string;
@@ -19,15 +20,11 @@ export function QuickPayment({ cycleId, onSubmit, onCancel, isPending }: QuickPa
     return (
         <div className="space-y-3">
             <div className="flex flex-col gap-2">
-                <input
-                    type="number"
+                <AmountInput
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={setAmount}
                     placeholder="Amount paid"
-                    className="w-full px-3 py-3 rounded-lg bg-background border border-input focus:ring-2 focus:ring-primary text-sm"
                     autoFocus
-                    min="0"
-                    step="0.01"
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !isPending) {
                             handleSubmit();

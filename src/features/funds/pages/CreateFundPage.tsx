@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DatePicker } from '@/components/DatePicker';
+import { AmountInput } from '@/components/AmountInput';
 
 export default function CreateFundPage() {
   const navigate = useNavigate();
@@ -53,9 +54,8 @@ export default function CreateFundPage() {
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Payment Amount (₹)</label>
-          <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 2000"
-            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+          <label className="text-xs text-muted-foreground mb-1.5 block">Payment Amount</label>
+          <AmountInput value={amount} onChange={setAmount} placeholder="e.g. 2000" />
         </div>
 
         <div>
