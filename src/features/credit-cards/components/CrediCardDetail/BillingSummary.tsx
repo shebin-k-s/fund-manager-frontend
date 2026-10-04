@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { format, isBefore, isAfter, startOfDay } from 'date-fns';
-import { Check, X, AlertCircle, Calendar, Clock, ChevronDown, ChevronUp, CreditCardIcon, DollarSign, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { format, isBefore, isAfter, startOfDay, differenceInCalendarDays } from 'date-fns';
+import { Check, AlertCircle, Clock, ChevronDown, CreditCardIcon, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuickPayment } from './QuickPayment';
 import { getBillingCycles } from '../../utils/cardDateUtils';
@@ -88,6 +88,78 @@ export function CardPaymentStatus({
   }
 
   const isPending = externalPending || removingCycle !== null;
+
+  const renderDueList = (kind: 'overdue' | 'upcoming', list: typeof overdueCycles) => {
+    const isOverdue = kind === 'overdue';
+    return (
+      <div className="space-y-2">
+        <p className={cn(
+          'text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1.5 px-1',
+          isOverdue ? 'text-red-400' : 'text-blue-400'
+        )}>
+          {isOverdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+          {isOverdue ? 'Overdue' : 'Upcoming'} · {list.length}
+        </p>
+
+        <div className={cn(
+          'rounded-2xl border overflow-hidden divide-y',
+          isOverdue
+            ? 'bg-red-500/[0.04] border-red-500/20 divide-red-500/10'
+            : 'bg-card/80 border-white/5 divide-white/5'
+        )}>
+          {list.map(cycle => {
+            const days = differenceInCalendarDays(cycle.dueDate, today);
+            const isPaying = payingCycle === cycle.id;
+            const status = isOverdue
+              ? `${-days} day${-days !== 1 ? 's' : ''} overdue`
+              : days === 0 ? 'Due today' : `Due in ${days} day${days !== 1 ? 's' : ''}`;
+
+            return (
+              <div key={cycle.id} className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">{format(cycle.billDate, 'MMM yyyy')} bill</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Due {format(cycle.dueDate, 'd MMM')}
+                      <span> · </span>
+                      <span className={isOverdue ? 'text-red-400' : days === 0 ? 'text-amber-400' : 'text-blue-400'}>
+                        {status}
+                      </span>
+                    </p>
+                  </div>
+                  {!isPaying && (
+                    <button
+                      onClick={() => setPayingCycle(cycle.id)}
+                      disabled={isPending}
+                      className={cn(
+                        'rounded-full px-4 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50',
+                        isOverdue
+                          ? 'bg-red-500 text-white hover:bg-red-500/90'
+                          : 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25'
+                      )}
+                    >
+                      Pay
+                    </button>
+                  )}
+                </div>
+
+                {isPaying && (
+                  <div className="mt-3">
+                    <QuickPayment
+                      cycleId={cycle.id}
+                      onSubmit={(amount) => handlePaySubmit(cycle.id, amount)}
+                      onCancel={handleCancelPayment}
+                      isPending={isPending}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -184,146 +256,10 @@ export function CardPaymentStatus({
       )}
 
       {/* Overdue Section - Only show if not hidden */}
-      {overdueCycles.length > 0 && !hidePending && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-red-400 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
-            Overdue Payments ({overdueCycles.length})
-          </h3>
-          <div className="space-y-2">
-            {overdueCycles.map(cycle => {
-              const daysOverdue = Math.ceil((today.getTime() - cycle.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-              const isPaying = payingCycle === cycle.id;
-
-              if (isPaying) {
-                return (
-                  <div key={cycle.id} className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
-                    <div className="mb-3 pb-2 border-b border-red-500/20">
-                      <p className="text-sm font-medium text-white">
-                        Paying for: {format(cycle.billDate, 'MMMM yyyy')}
-                      </p>
-                      <p className="text-xs text-red-400">
-                        Due date: {format(cycle.dueDate, 'MMM d, yyyy')}
-                      </p>
-                    </div>
-                    <QuickPayment
-                      cycleId={cycle.id}
-                      onSubmit={(amount) => handlePaySubmit(cycle.id, amount)}
-                      onCancel={handleCancelPayment}
-                      isPending={isPending}
-                    />
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={cycle.id}
-                  className="bg-red-500/5 border border-red-500/20 rounded-xl p-4"
-                >
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                        <X className="w-5 h-5 text-red-400" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-white">{format(cycle.billDate, 'MMMM yyyy')}</p>
-                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                          <Calendar className="w-3 h-3" />
-                          <span>Due {format(cycle.dueDate, 'MMM d, yyyy')}</span>
-                        </div>
-                        <p className="text-xs text-red-400 font-medium mt-1">
-                          {daysOverdue} {daysOverdue === 1 ? 'day' : 'days'} overdue
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setPayingCycle(cycle.id)}
-                      disabled={isPending}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors border border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isPending && payingCycle === cycle.id ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-                      ) : 'Pay Now'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {overdueCycles.length > 0 && !hidePending && renderDueList('overdue', overdueCycles)}
 
       {/* Upcoming Section - Only show if not hidden */}
-      {upcomingCycles.length > 0 && !hideUpcoming && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-blue-400 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Upcoming Payments ({upcomingCycles.length})
-          </h3>
-          <div className="space-y-2">
-            {upcomingCycles.map(cycle => {
-              const daysUntilDue = Math.ceil((cycle.dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-              const isPaying = payingCycle === cycle.id;
-
-              if (isPaying) {
-                return (
-                  <div key={cycle.id} className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
-                    <div className="mb-3 pb-2 border-b border-blue-500/20">
-                      <p className="text-sm font-medium text-white">
-                        Paying for: {format(cycle.billDate, 'MMMM yyyy')}
-                      </p>
-                      <p className="text-xs text-blue-400">
-                        Due date: {format(cycle.dueDate, 'MMM d, yyyy')}
-                      </p>
-                    </div>
-                    <QuickPayment
-                      cycleId={cycle.id}
-                      onSubmit={(amount) => handlePaySubmit(cycle.id, amount)}
-                      onCancel={handleCancelPayment}
-                      isPending={isPending}
-                    />
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={cycle.id}
-                  className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4"
-                >
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-5 h-5 text-blue-400" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-white">{format(cycle.billDate, 'MMMM yyyy')}</p>
-                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                          <Calendar className="w-3 h-3" />
-                          <span>Due {format(cycle.dueDate, 'MMM d, yyyy')}</span>
-                        </div>
-                        <p className="text-xs text-blue-400 font-medium mt-1">
-                          {daysUntilDue} days until due
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setPayingCycle(cycle.id)}
-                      disabled={isPending}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-blue-500/10 text-blue-400 text-sm font-medium hover:bg-blue-500/20 transition-colors border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isPending && payingCycle === cycle.id ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-                      ) : 'Pay Now'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {upcomingCycles.length > 0 && !hideUpcoming && renderDueList('upcoming', upcomingCycles)}
 
       {/* All Caught Up State */}
       {overdueCount === 0 && upcomingCount === 0 && paidCount > 0 && (
@@ -339,82 +275,85 @@ export function CardPaymentStatus({
       )}
 
       {/* Payment History */}
-      {card.payments && card.payments.length > 0 && (
-        <div className="space-y-2 pt-2">
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="w-full flex items-center justify-between p-3 bg-slate-800/30 rounded-xl hover:bg-slate-800/50 transition-colors border border-slate-700"
-          >
-            <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-emerald-400" />
-              Payment History ({card.payments.length})
-            </span>
-            {showHistory ? (
-              <ChevronUp className="w-4 h-4 text-slate-400" />
-            ) : (
-              <ChevronDown className="w-4 h-4 text-slate-400" />
-            )}
-          </button>
+      {card.payments && card.payments.length > 0 && (() => {
+        const dueByCycle = new Map(cycles.map(c => [c.cycle, c.dueDate]));
+        const history = [...card.payments].sort((a, b) => {
+          if (a.cycle !== b.cycle) return b.cycle.localeCompare(a.cycle);
+          const dateA = a.date ? new Date(a.date).getTime() : 0;
+          const dateB = b.date ? new Date(b.date).getTime() : 0;
+          return dateB - dateA;
+        });
+        const totalHistoryPaid = history.reduce(
+          (sum, p) => sum + (parseFloat(String(p.amount || 0).replace(/,/g, '')) || 0),
+          0
+        );
 
-          {showHistory && (
-            <div className="space-y-2 mt-2">
-              {(() => {
-                const allPayments = [...card.payments].sort((a, b) => {
-                  if (a.cycle !== b.cycle) {
-                    return b.cycle.localeCompare(a.cycle);
-                  }
-                  const dateA = a.date ? new Date(a.date).getTime() : 0;
-                  const dateB = b.date ? new Date(b.date).getTime() : 0;
-                  return dateB - dateA;
-                });
-                
-                return allPayments.map((payment, index) => {
+        return (
+          <div className="pt-2 space-y-2">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="w-full stat-card p-4 flex items-center justify-between text-left"
+            >
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">
+                  Payment History
+                </p>
+                <p className="text-sm text-white mt-1">
+                  {history.length} payment{history.length !== 1 ? 's' : ''}
+                  <span className="text-muted-foreground"> · </span>
+                  ₹{formatRupees(totalHistoryPaid)} paid
+                </p>
+              </div>
+              <ChevronDown className={cn('w-4 h-4 text-muted-foreground transition-transform', showHistory && 'rotate-180')} />
+            </button>
+
+            {showHistory && (
+              <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-white/5 shadow-md overflow-hidden divide-y divide-white/5">
+                {history.map((payment, index) => {
                   const isRemoving = removingCycle === payment.cycle;
-                  const [py, pm] = payment.cycle.split('-');
-                  const cycleBillDate = new Date(parseInt(py), parseInt(pm) - 1, card.billDate);
+                  const [py, pm] = payment.cycle.split('-').map(Number);
+                  const paidOn = payment.date ? new Date(payment.date) : null;
+                  const due = dueByCycle.get(payment.cycle);
+                  const daysLate = paidOn && due ? differenceInCalendarDays(paidOn, due) : null;
+                  const amount = parseFloat(String(payment.amount || 0).replace(/,/g, '')) || 0;
 
                   return (
-                    <div
-                      key={`${payment.cycle}-${index}`}
-                      className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3"
-                    >
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                              <Check className="w-4 h-4 text-emerald-400" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-white truncate">{format(cycleBillDate, 'MMMM yyyy')}</p>
-                              <p className="text-xs text-slate-400 truncate">
-                                Paid {payment.date ? format(new Date(payment.date), 'MMM d, yyyy') : 'Unknown'}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-sm font-semibold text-emerald-400">
-                            ₹{payment.amount
-                              ? parseFloat(String(payment.amount).replace(/,/g, '')).toLocaleString('en-IN', { maximumFractionDigits: 2 })
-                              : '0'}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => setConfirmCycle(payment.cycle)}
-                          disabled={isPending || isRemoving}
-                          className="text-xs text-red-400 hover:text-red-300 self-start disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                        >
-                          {isRemoving ? (
-                            <><Loader2 className="w-3 h-3 animate-spin" /> Removing...</>
-                          ) : 'Remove payment'}
-                        </button>
+                    <div key={`${payment.cycle}-${index}`} className="flex items-center gap-3 px-4 py-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white">
+                          {format(new Date(py, pm - 1), 'MMM yyyy')} bill
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {paidOn ? `Paid ${format(paidOn, 'd MMM')}` : 'Paid'}
+                          {daysLate !== null && (
+                            <>
+                              <span> · </span>
+                              <span className={daysLate > 0 ? 'text-amber-400' : 'text-emerald-400'}>
+                                {daysLate > 0 ? `${daysLate} day${daysLate !== 1 ? 's' : ''} late` : 'On time'}
+                              </span>
+                            </>
+                          )}
+                        </p>
                       </div>
+                      <p className="text-sm font-semibold text-white tabular-nums">
+                        ₹{formatRupees(amount)}
+                      </p>
+                      <button
+                        onClick={() => setConfirmCycle(payment.cycle)}
+                        disabled={isPending || isRemoving}
+                        className="w-8 h-8 -mr-1.5 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        title="Remove payment"
+                      >
+                        {isRemoving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   );
-                });
-              })()}
-            </div>
-          )}
-        </div>
-      )}
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
       <ConfirmDialog
         open={confirmCycle !== null}
         onCancel={() => setConfirmCycle(null)}
@@ -432,4 +371,13 @@ export function CardPaymentStatus({
 function formatCycle(cycleId: string): string {
   const [y, m] = cycleId.split('-').map(Number);
   return format(new Date(y, m - 1), 'MMMM yyyy');
+}
+
+// Whole rupees without decimals, otherwise always 2 places (₹12,340.50)
+function formatRupees(value: number): string {
+  const hasPaise = Math.round(value * 100) % 100 !== 0;
+  return value.toLocaleString('en-IN', {
+    minimumFractionDigits: hasPaise ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
 }
