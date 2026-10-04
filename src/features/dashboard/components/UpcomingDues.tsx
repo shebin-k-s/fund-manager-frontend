@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { format, isBefore, isSameDay } from 'date-fns';
-import { CreditCard as CCIcon, Landmark } from 'lucide-react';
+import { format, differenceInCalendarDays } from 'date-fns';
+import { CreditCard as CCIcon, Landmark, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmptyState } from './EmptyState';
 import { CreditCard } from '@/features/credit-cards/types';
@@ -9,6 +9,18 @@ import { Fund } from '@/types/finance';
 import { useSwipeGesture } from '@/context/SwipeGestureContext';
 
 const gradientClasses = ['cc-gradient-1', 'cc-gradient-2', 'cc-gradient-3', 'cc-gradient-4'];
+
+type DuesTab = 'funds' | 'cards';
+const TAB_STORAGE_KEY = 'dashboard-dues-tab';
+
+// Remember the selected tab so coming back from a fund/card keeps it
+function loadTab(): DuesTab {
+  try {
+    return sessionStorage.getItem(TAB_STORAGE_KEY) === 'cards' ? 'cards' : 'funds';
+  } catch {
+    return 'funds';
+  }
+}
 
 interface UpcomingDuesProps {
   funds: Array<{ fund: Fund; date: Date }>;
@@ -18,7 +30,7 @@ interface UpcomingDuesProps {
 }
 
 export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesProps) {
-  const [activeTab, setActiveTab] = useState<'funds' | 'cards'>('funds');
+  const [activeTab, setActiveTab] = useState<DuesTab>(loadTab);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
   const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
 
@@ -30,6 +42,9 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
     if (activeTab === tab) return;
     setSlideDirection(dir);
     setActiveTab(tab);
+    try {
+      sessionStorage.setItem(TAB_STORAGE_KEY, tab);
+    } catch { /* storage unavailable — tab just won't be remembered */ }
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -160,46 +175,87 @@ export function UpcomingDues({ funds, cards, today, isLoading }: UpcomingDuesPro
   );
 }
 
-function FundItem({ fund, date, today }: { fund: Fund; date: Date; today: Date }) {
-  const overdue = isBefore(date, today);
+function urgencyClasses(days: number) {
+  if (days < 0) return 'bg-destructive/15 text-destructive border-destructive/25';
+  if (days <= 1) return 'bg-amber-500/15 text-amber-400 border-amber-500/25';
+  if (days <= 7) return 'bg-blue-500/15 text-blue-300 border-blue-500/25';
+  return 'bg-white/[0.04] text-white/70 border-white/10';
+}
+
+// Days-left tile: the first thing you see is how soon it's due
+function Countdown({ days }: { days: number }) {
   return (
-    <Link to={`/funds/${fund.id}`} className="touch-card p-3.5 flex items-center gap-3.5 group">
-      <div className="w-11 h-11 rounded-xl bg-blue-900/40 border border-blue-800/50 flex items-center justify-center text-blue-200/90 group-hover:scale-110 shadow-sm transition-transform duration-300">
-        <Landmark className="w-5 h-5 drop-shadow-sm" />
-      </div>
+    <div className={cn(
+      'w-12 h-12 rounded-xl border flex flex-col items-center justify-center shrink-0',
+      urgencyClasses(days)
+    )}>
+      {days === 0 ? (
+        <span className="text-[11px] font-extrabold uppercase tracking-wide">Today</span>
+      ) : (
+        <>
+          <span className="text-lg font-bold leading-none">{Math.abs(days)}</span>
+          <span className="text-[9px] font-semibold uppercase tracking-wide mt-0.5 opacity-80">
+            {days < 0 ? 'late' : days === 1 ? 'day' : 'days'}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+function dueLabel(days: number, date: Date) {
+  if (days < 0) return `Was due ${format(date, 'MMM d')}`;
+  if (days === 0) return 'Due today';
+  if (days === 1) return `Due tomorrow · ${format(date, 'MMM d')}`;
+  return `Due ${format(date, 'EEE, MMM d')}`;
+}
+
+function DueRow({ to, days, title, meta, date }: {
+  to: string; days: number; title: string; meta: React.ReactNode; date: Date;
+}) {
+  return (
+    <Link to={to} className="touch-card p-3 flex items-center gap-3.5 group">
+      <Countdown days={days} />
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-[14px] text-white/90 truncate transition-colors group-hover:text-white">{fund.name}</p>
-        <p className="text-[12px] font-medium text-muted-foreground/80">₹{fund.amount.toLocaleString('en-IN')}</p>
+        <p className="font-semibold text-[14px] text-white/90 truncate group-hover:text-white transition-colors">{title}</p>
+        <p className="text-[12px] text-muted-foreground/80 truncate mt-0.5 flex items-center gap-1.5">
+          {meta}
+          <span className="opacity-50">·</span>
+          <span className={cn(days < 0 && 'text-destructive/90')}>{dueLabel(days, date)}</span>
+        </p>
       </div>
-      <div className={cn(
-        'text-[10px] uppercase font-bold tracking-wider px-2.5 py-1.5 rounded-[0.5rem] whitespace-nowrap',
-        overdue ? 'bg-destructive/10 text-destructive' : 'bg-blue-900/30 text-blue-300/80'
-      )}>
-        {overdue ? 'Overdue' : isSameDay(date, today) ? 'Due Today' : format(date, 'MMM d')}
-      </div>
+      <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0 group-hover:translate-x-0.5 transition-transform" />
     </Link>
   );
 }
 
+function FundItem({ fund, date, today }: { fund: Fund; date: Date; today: Date }) {
+  return (
+    <DueRow
+      to={`/funds/${fund.id}`}
+      days={differenceInCalendarDays(date, today)}
+      date={date}
+      title={fund.name}
+      meta={<span className="font-medium text-white/70">₹{fund.amount.toLocaleString('en-IN')}</span>}
+    />
+  );
+}
+
 function CardItem({ card, cycle, today, index }: { card: CreditCard; cycle: { dueDate: Date }; today: Date; index: number }) {
-  const overdue = isBefore(cycle.dueDate, today);
   const gradient = gradientClasses[index % gradientClasses.length];
   return (
-    <Link to={`/cards/${card.id}`} className="touch-card p-3.5 flex items-center gap-3.5 group">
-      <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center text-white/80 shadow-md group-hover:scale-110 transition-transform duration-300 relative overflow-hidden', gradient)}>
-        <CCIcon className="w-5 h-5 z-10" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-[14px] text-white/90 truncate transition-colors group-hover:text-white">{card.name}</p>
-        <p className="text-[12px] font-medium text-muted-foreground/80">•••• {card.lastFour || '••••'}</p>
-      </div>
-      <div className={cn(
-        'text-[10px] uppercase font-bold tracking-wider px-2.5 py-1.5 rounded-[0.5rem] whitespace-nowrap',
-        overdue ? 'bg-destructive/10 text-destructive' : 'bg-white/5 text-white/70'
-      )}>
-        {overdue ? 'Overdue' : isSameDay(cycle.dueDate, today) ? 'Due Today' : `Due ${format(cycle.dueDate, 'MMM d')}`}
-      </div>
-    </Link>
+    <DueRow
+      to={`/cards/${card.id}`}
+      days={differenceInCalendarDays(cycle.dueDate, today)}
+      date={cycle.dueDate}
+      title={card.name}
+      meta={
+        <span className="flex items-center gap-1.5 shrink-0">
+          <span className={cn('w-4 h-2.5 rounded-[3px]', gradient)} />
+          {card.lastFour || '••••'}
+        </span>
+      }
+    />
   );
 }
 
@@ -207,8 +263,8 @@ function DuesSkeleton() {
   return (
     <div className="space-y-3">
       {[1, 2].map(i => (
-        <div key={i} className="touch-card p-3.5 flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-white/10 animate-pulse" />
+        <div key={i} className="touch-card p-3 flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-white/10 animate-pulse" />
           <div className="flex-1 min-w-0">
             <div className="h-4 w-32 bg-white/5 rounded animate-pulse mb-1.5" />
             <div className="h-2.5 w-20 bg-white/5 rounded animate-pulse" />
