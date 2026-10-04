@@ -4,6 +4,7 @@ import type {
   CreateFundPayload,
   UpdateFundPayload,
   FundPaymentPayload,
+  FundPayoutPayload,
 } from '../types';
 
 const FUNDS_URL = '/funds';
@@ -58,6 +59,19 @@ export const fundsApi = {
     const { data } = await apiClient.delete<Fund>(
       `${FUNDS_URL}/${fundId}/payments/${encodeURIComponent(date)}`
     );
+    return data;
+  },
+
+  async setPayout({ fundId, amount, date }: FundPayoutPayload): Promise<Fund> {
+    const { data } = await apiClient.put<Fund>(
+      `${FUNDS_URL}/${fundId}/payout`,
+      { amount, date }
+    );
+    return data;
+  },
+
+  async clearPayout(fundId: string): Promise<Fund> {
+    const { data } = await apiClient.delete<Fund>(`${FUNDS_URL}/${fundId}/payout`);
     return data;
   },
 };

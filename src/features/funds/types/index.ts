@@ -12,6 +12,8 @@ export interface Fund {
   dayOfMonth?: number; // 1-31
   startDate: string; // yyyy-MM-dd
   endDate?: string; // yyyy-MM-dd
+  payoutAmount?: number | string | null; // amount received back (decimal may arrive as string)
+  payoutDate?: string | null; // yyyy-MM-dd
   payments: FundPayment[];
   createdAt: string;
 }
@@ -34,4 +36,10 @@ export interface FundPaymentPayload {
   fundId: string;
   date: string;
   amount: number;
+}
+
+export interface FundPayoutPayload {
+  fundId: string;
+  amount: number;
+  date: string;
 }

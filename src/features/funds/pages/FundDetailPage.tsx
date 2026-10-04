@@ -1,17 +1,19 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
-import { addMonths, subMonths, isSameMonth, startOfDay, startOfMonth, isAfter, isBefore } from 'date-fns';
+import { addMonths, subMonths, isSameMonth, startOfDay, startOfMonth, isAfter, isBefore, format } from 'date-fns';
 import { useFundById, useMarkFundPaid, useRemoveFundPayment } from '../hooks/useFunds';
 import { getFundPaymentDates, getMissedCount, DAY_NAMES_FULL, dateKey } from '../utils/fundDateUtils';
 import { FundHeader } from '../components/fundDetail/FundHeader';
 import { MissedAlert } from '../components/fundDetail/MissedAlert';
 import { MonthNavigation } from '../components/fundDetail/MonthNavigation';
 import { PaymentList } from '../components/fundDetail/PaymentList';
+import { PayoutSection } from '../components/fundDetail/PayoutSection';
 import { FundStatsCards } from '../components/fundDetail/statsCards';
 import { FundStatementDocument } from '@/features/statements/components/FundStatementDocument';
 import type { Fund } from '../types';
 import { useSwipeGesture } from '@/context/SwipeGestureContext';
 import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 export default function FundDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +27,7 @@ export default function FundDetailPage() {
   const removePayment = useRemoveFundPayment();
 
   const [viewMonth, setViewMonth] = useState(new Date());
+  const [confirmRemoveDate, setConfirmRemoveDate] = useState<string | null>(null);
 
   // Touch and wheel swipe state
   const touchStartX = useRef<number | null>(null);
@@ -142,8 +145,15 @@ export default function FundDetailPage() {
   };
 
   const handleRemove = (dateStr: string) => {
-    if (fund) {
-      removePayment.mutate({ fundId: fund.id, date: dateStr });
+    setConfirmRemoveDate(dateStr);
+  };
+
+  const confirmRemove = () => {
+    if (fund && confirmRemoveDate) {
+      removePayment.mutate(
+        { fundId: fund.id, date: confirmRemoveDate },
+        { onSettled: () => setConfirmRemoveDate(null) }
+      );
     }
   };
 
@@ -172,6 +182,10 @@ export default function FundDetailPage() {
           isLoading={false}
         />
 
+        <div className="mt-2.5">
+          <PayoutSection fund={fund} totalPaid={totalInvested} />
+        </div>
+
         <div
           className="flex flex-col gap-4"
           onTouchStart={handleTouchStart}
@@ -199,6 +213,17 @@ export default function FundDetailPage() {
         </div>
         
         <FundStatementDocument fund={fund} />
+
+        <ConfirmDialog
+          open={confirmRemoveDate !== null}
+          onCancel={() => setConfirmRemoveDate(null)}
+          onConfirm={confirmRemove}
+          isPending={removePayment.isPending}
+          title="Remove this payment?"
+          description={confirmRemoveDate && `The payment for ${format(new Date(confirmRemoveDate), 'd MMM yyyy')} will be marked as unpaid again.`}
+          confirmLabel="Remove"
+          pendingLabel="Removing..."
+        />
       </div>
     </div>
   );

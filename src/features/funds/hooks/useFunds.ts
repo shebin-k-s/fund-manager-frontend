@@ -4,6 +4,7 @@ import type {
   CreateFundPayload,
   UpdateFundPayload,
   FundPaymentPayload,
+  FundPayoutPayload,
   Fund,
 } from '../types';
 import { getErrorMessage } from '@/utils/getErrorMessage';
@@ -142,6 +143,42 @@ export function useRemoveFundPayment() {
 
     onError: (error) => {
       console.error('Remove Payment Error:', getErrorMessage(error));
+    },
+  });
+}
+
+/* ===========================
+   RECORD / CLEAR PAYOUT
+=========================== */
+
+export function useSetFundPayout() {
+  const qc = useQueryClient();
+
+  return useMutation<Fund, Error, FundPayoutPayload>({
+    mutationFn: fundsApi.setPayout,
+
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: FUNDS_KEY });
+    },
+
+    onError: (error) => {
+      console.error('Set Payout Error:', getErrorMessage(error));
+    },
+  });
+}
+
+export function useClearFundPayout() {
+  const qc = useQueryClient();
+
+  return useMutation<Fund, Error, string>({
+    mutationFn: fundsApi.clearPayout,
+
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: FUNDS_KEY });
+    },
+
+    onError: (error) => {
+      console.error('Clear Payout Error:', getErrorMessage(error));
     },
   });
 }
