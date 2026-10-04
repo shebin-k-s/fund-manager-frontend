@@ -11,13 +11,16 @@ import { FundStatsCards } from '../components/fundDetail/statsCards';
 import { FundStatementDocument } from '@/features/statements/components/FundStatementDocument';
 import type { Fund } from '../types';
 import { useSwipeGesture } from '@/context/SwipeGestureContext';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
 
 export default function FundDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { disableGlobalSwipe, enableGlobalSwipe } = useSwipeGesture();
 
-  const { data: fund, isLoading } = useFundById(id!);
+  const fundQuery = useFundById(id!);
+  const { data: fund, isLoading, isPaused } = fundQuery;
+  const freshness = useQueryFreshness(fundQuery);
   const markPaid = useMarkFundPaid();
   const removePayment = useRemoveFundPayment();
 
@@ -28,8 +31,8 @@ export default function FundDetailPage() {
   const touchStartY = useRef<number | null>(null);
   const scrollCooldown = useRef(false);
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state (also while offline with nothing cached yet)
+  if (isLoading || (isPaused && !fund)) {
     return (
       <div className="animate-fade-in">
         <div className="page-header flex items-center gap-3">
@@ -154,6 +157,7 @@ export default function FundDetailPage() {
         amount={fund.amount}
         fundId={fund.id}
         isLoading={false}
+        freshness={freshness}
       />
 
       <div className="page-content">

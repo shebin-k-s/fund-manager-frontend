@@ -1,16 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pencil, FileText } from 'lucide-react';
 import { exportStatementToPdf } from '@/features/statements/utils/exportToPdf';
-import { cn } from '@/lib/utils';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
+import type { FreshnessStatus } from '@/hooks/useQueryFreshness';
 
 interface CardHeaderProps {
     cardName: string;
     cardId: string;
     isPending?: boolean;
     isLoading?: boolean;
+    freshness?: { status: FreshnessStatus; isFetching: boolean };
 }
 
-export function CardHeader({ cardName, cardId, isPending, isLoading }: CardHeaderProps) {
+export function CardHeader({ cardName, cardId, isPending, isLoading, freshness }: CardHeaderProps) {
     const navigate = useNavigate();
 
     if (isLoading) {
@@ -32,7 +34,10 @@ export function CardHeader({ cardName, cardId, isPending, isLoading }: CardHeade
             <ArrowLeft className="w-4 h-4 text-secondary-foreground" />
         </button>
 
-            <h1 className="text-xl font-bold truncate flex-1">{cardName}</h1>
+            <h1 className="text-xl font-bold flex items-center gap-2 flex-1 min-w-0">
+                <span className="truncate">{cardName}</span>
+                {freshness && <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />}
+            </h1>
 
             <button
                 onClick={() => exportStatementToPdf('card-statement-container', `${cardName}_Statement`)}

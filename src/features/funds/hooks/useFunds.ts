@@ -28,10 +28,16 @@ export function useFundsQuery() {
 =========================== */
 
 export function useFundById(id: string) {
+  const qc = useQueryClient();
+
   return useQuery<Fund, Error>({
     queryKey: [...FUNDS_KEY, id],
     queryFn: () => fundsApi.getById(id),
     enabled: !!id,
+    // Seed from the cached list so a fund opened for the first time while
+    // offline still renders instead of redirecting away.
+    initialData: () => qc.getQueryData<Fund[]>(FUNDS_KEY)?.find((f) => f.id === id),
+    initialDataUpdatedAt: () => qc.getQueryState(FUNDS_KEY)?.dataUpdatedAt,
     staleTime: 30_000,
     retry: 1,
   });

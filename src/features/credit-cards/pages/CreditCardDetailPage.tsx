@@ -4,12 +4,17 @@ import { CardHeader } from '../components/CrediCardDetail/CardHeader';
 import { CardVisual } from '../components/CrediCardDetail/CardVisual';
 import { CardPaymentStatus } from '../components/CrediCardDetail/BillingSummary';
 import { CardStatementDocument } from '@/features/statements/components/CardStatementDocument';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
 
 export default function CreditCardDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: card, isLoading } = useCardById(id!);
+  const cardQuery = useCardById(id!);
+  const { data: card, isPaused } = cardQuery;
+  // Treat a paused (offline) fetch with nothing cached as still loading
+  const isLoading = cardQuery.isLoading || (isPaused && !card);
+  const freshness = useQueryFreshness(cardQuery);
   const markPaid = useMarkCardPaid();
   const removePayment = useRemoveCardPayment();
 
@@ -58,6 +63,7 @@ export default function CreditCardDetailPage() {
         cardId={card?.id ?? ''}
         isPending={isPending}
         isLoading={isLoading}
+        freshness={freshness}
       />
 
       <div className="page-content space-y-6 overflow-hidden">

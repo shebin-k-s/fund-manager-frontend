@@ -25,6 +25,8 @@ export function useCardsQuery() {
 }
 
 export function useCardById(id: string) {
+  const queryClient = useQueryClient();
+
   return useQuery<CreditCard | undefined, Error>({
     queryKey: [...CARDS_KEY, id],
     queryFn: async () => {
@@ -32,6 +34,10 @@ export function useCardById(id: string) {
       return creditCardsApi.getById(id);
     },
     enabled: !!id,
+    // Seed from the cached list so a card opened for the first time while
+    // offline still renders instead of redirecting away.
+    initialData: () => queryClient.getQueryData<CreditCard[]>(CARDS_KEY)?.find((c) => c.id === id),
+    initialDataUpdatedAt: () => queryClient.getQueryState(CARDS_KEY)?.dataUpdatedAt,
     staleTime: 30_000,
     retry: 1,
   });

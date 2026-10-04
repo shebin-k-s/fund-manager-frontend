@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pencil, FileText } from 'lucide-react';
 import { exportStatementToPdf } from '@/features/statements/utils/exportToPdf';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
+import type { FreshnessStatus } from '@/hooks/useQueryFreshness';
 
 interface FundHeaderProps {
     name: string;
@@ -8,9 +10,10 @@ interface FundHeaderProps {
     amount: number;
     fundId: string;
     isLoading?: boolean;
+    freshness?: { status: FreshnessStatus; isFetching: boolean };
 }
 
-export function FundHeader({ name, recurrenceLabel, amount, fundId, isLoading }: FundHeaderProps) {
+export function FundHeader({ name, recurrenceLabel, amount, fundId, isLoading, freshness }: FundHeaderProps) {
     const navigate = useNavigate();
 
     if (isLoading) {
@@ -35,7 +38,10 @@ export function FundHeader({ name, recurrenceLabel, amount, fundId, isLoading }:
                 <ArrowLeft className="w-4 h-4 text-secondary-foreground" />
             </button>
             <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold truncate">{name}</h1>
+                <h1 className="text-xl font-bold flex items-center gap-2 min-w-0">
+                    <span className="truncate">{name}</span>
+                    {freshness && <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />}
+                </h1>
                 <p className="text-xs text-muted-foreground">
                     {recurrenceLabel} · ₹{amount.toLocaleString('en-IN')}
                 </p>
