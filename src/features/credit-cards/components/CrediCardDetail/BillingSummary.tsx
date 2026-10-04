@@ -6,6 +6,7 @@ import { QuickPayment } from './QuickPayment';
 import { getBillingCycles } from '../../utils/cardDateUtils';
 import { CreditCard } from '../../types';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface CardPaymentStatusProps {
   card: CreditCard;
@@ -22,6 +23,7 @@ export function CardPaymentStatus({
 }: CardPaymentStatusProps) {
   const [payingCycle, setPayingCycle] = useState<string | null>(null);
   const [removingCycle, setRemovingCycle] = useState<string | null>(null);
+  const [confirmCycle, setConfirmCycle] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [hidePending, setHidePending] = useState(false);
   const [hideUpcoming, setHideUpcoming] = useState(false);
@@ -67,6 +69,7 @@ export function CardPaymentStatus({
       await onRemove(cycleId);
     } finally {
       setRemovingCycle(null);
+      setConfirmCycle(null);
     }
   };
 
@@ -395,7 +398,7 @@ export function CardPaymentStatus({
                           </span>
                         </div>
                         <button
-                          onClick={() => handleRemovePayment(payment.cycle)}
+                          onClick={() => setConfirmCycle(payment.cycle)}
                           disabled={isPending || isRemoving}
                           className="text-xs text-red-400 hover:text-red-300 self-start disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
@@ -412,6 +415,21 @@ export function CardPaymentStatus({
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={confirmCycle !== null}
+        onCancel={() => setConfirmCycle(null)}
+        onConfirm={() => confirmCycle && handleRemovePayment(confirmCycle)}
+        isPending={removingCycle !== null}
+        title="Remove this payment?"
+        description={confirmCycle && `The ${formatCycle(confirmCycle)} bill will be marked as unpaid again.`}
+        confirmLabel="Remove"
+        pendingLabel="Removing..."
+      />
     </div>
   );
+}
+
+function formatCycle(cycleId: string): string {
+  const [y, m] = cycleId.split('-').map(Number);
+  return format(new Date(y, m - 1), 'MMMM yyyy');
 }
