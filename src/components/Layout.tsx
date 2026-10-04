@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useRef, useState, useLayoutEffect } from 'react';
+import { Outlet, Link, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { LayoutDashboard, Wallet, CreditCard, CalendarDays, FileText, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SwipeGestureProvider, useSwipeGesture } from '@/context/SwipeGestureContext';
@@ -15,19 +15,76 @@ const tabs = [
   { path: '/statements', icon: FileText, label: 'Statements' },
 ];
 
+const SCROLL_STORAGE_KEY = 'scroll-positions';
+
+function loadScrollPositions(): Record<string, number> {
+  try {
+    return JSON.parse(sessionStorage.getItem(SCROLL_STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
 const SWIPE_THRESHOLD = 30;  // px — responsive on mobile
 const SWIPE_RATIO = 1.0;    // deltaX just needs to be > deltaY
 const WHEEL_THRESHOLD = 40; // deltaX pixels for trackpad horizontal swipe
 
 function LayoutInner() {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  const navigationType = useNavigationType();
   const navigate = useNavigate();
   const { isGlobalSwipeEnabled } = useSwipeGesture();
 
-  useEffect(() => {
-    const el = document.getElementById('main-scroll-container');
-    if (el) el.scrollTop = 0;
-  }, [pathname]);
+  // ─── Scroll restoration ───
+  // Remember the scroll position of each history entry. Back/forward and a
+  // page refresh (both POP) restore it; opening a new page starts at the top.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollPositions = useRef<Record<string, number>>(loadScrollPositions());
+  const locationKeyRef = useRef(location.key);
+  locationKeyRef.current = location.key;
+  const saveFrame = useRef<number | null>(null);
+
+  const handleScroll = useCallback(() => {
+    if (saveFrame.current !== null) return;
+    saveFrame.current = requestAnimationFrame(() => {
+      saveFrame.current = null;
+      const el = scrollRef.current;
+      if (!el) return;
+      scrollPositions.current[locationKeyRef.current] = el.scrollTop;
+      try {
+        sessionStorage.setItem(SCROLL_STORAGE_KEY, JSON.stringify(scrollPositions.current));
+      } catch { /* storage unavailable — keep in memory only */ }
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const target = navigationType === 'POP' ? scrollPositions.current[location.key] ?? 0 : 0;
+    el.scrollTop = target;
+    if (target === 0) return;
+
+    // Content (cached data, charts) may still be laying out — keep retrying
+    // for a short while until the page is tall enough to reach the position.
+    // Stop as soon as the user scrolls themselves.
+    let frame = 0;
+    let tries = 0;
+    const stop = () => cancelAnimationFrame(frame);
+    const retry = () => {
+      if (Math.abs(el.scrollTop - target) <= 1 || tries++ > 30) return;
+      el.scrollTop = target;
+      frame = requestAnimationFrame(retry);
+    };
+    frame = requestAnimationFrame(retry);
+    el.addEventListener('touchstart', stop, { once: true, passive: true });
+    el.addEventListener('wheel', stop, { once: true, passive: true });
+    return () => {
+      stop();
+      el.removeEventListener('touchstart', stop);
+      el.removeEventListener('wheel', stop);
+    };
+  }, [location.key, navigationType]);
 
   // ─── Shared state for touch gestures ───
   const startX = useRef(0);
@@ -187,6 +244,8 @@ function LayoutInner() {
         {/* Main Content */}
         <div
           id="main-scroll-container"
+          ref={scrollRef}
+          onScroll={handleScroll}
           className="flex-1 overflow-y-auto pb-[80px] custom-scrollbar relative z-10 w-full sm:px-1 transition-transform duration-200"
           style={{ touchAction: 'pan-y', transform: `translateY(${isRefreshing ? 60 : pullDistance}px)` }}
           onTouchStart={handleTouchStart}
