@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { format, isBefore, startOfDay } from 'date-fns';
+import { format, isBefore, isSameDay, startOfDay } from 'date-fns';
 import { CreditCard as CCIcon, AlertCircle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CreditCard } from '../../types';
@@ -72,7 +72,7 @@ export function CardVisual({ card, index }: CardVisualProps) {
                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/20">
                         <Calendar className="w-3 h-3 text-white" />
                         <span className="text-[10px] font-medium text-white">
-                            Due {format(nextCycle.dueDate, 'MMM d')}
+                            {isSameDay(nextCycle.dueDate, today) ? 'Due Today' : `Due ${format(nextCycle.dueDate, 'MMM d')}`}
                         </span>
                     </div>
                 )}

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { format, isBefore } from 'date-fns';
+import { format, isBefore, isSameDay } from 'date-fns';
 import { CreditCard as CCIcon, Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmptyState } from './EmptyState';
@@ -175,7 +175,7 @@ function FundItem({ fund, date, today }: { fund: Fund; date: Date; today: Date }
         'text-[10px] uppercase font-bold tracking-wider px-2.5 py-1.5 rounded-[0.5rem] whitespace-nowrap',
         overdue ? 'bg-destructive/10 text-destructive' : 'bg-blue-900/30 text-blue-300/80'
       )}>
-        {overdue ? 'Overdue' : format(date, 'MMM d')}
+        {overdue ? 'Overdue' : isSameDay(date, today) ? 'Due Today' : format(date, 'MMM d')}
       </div>
     </Link>
   );
@@ -197,7 +197,7 @@ function CardItem({ card, cycle, today, index }: { card: CreditCard; cycle: { du
         'text-[10px] uppercase font-bold tracking-wider px-2.5 py-1.5 rounded-[0.5rem] whitespace-nowrap',
         overdue ? 'bg-destructive/10 text-destructive' : 'bg-white/5 text-white/70'
       )}>
-        {overdue ? 'Overdue' : `Due ${format(cycle.dueDate, 'MMM d')}`}
+        {overdue ? 'Overdue' : isSameDay(cycle.dueDate, today) ? 'Due Today' : `Due ${format(cycle.dueDate, 'MMM d')}`}
       </div>
     </Link>
   );

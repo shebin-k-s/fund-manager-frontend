@@ -50,6 +50,7 @@ export function getBillingCycles(card: CreditCard, rangeEnd?: Date): BillingCycl
     : startOfDay(new Date(card.createdAt));
 
   const now = new Date();
+  const today = startOfDay(now);
   const cycles: BillingCycle[] = [];
 
   let y = startFrom.getFullYear();
@@ -90,10 +91,10 @@ export function getBillingCycles(card: CreditCard, rangeEnd?: Date): BillingCycl
       isPaid: !!payment,
       paidAmount: payment?.amount,
       paidDate: payment?.date ? new Date(payment.date) : undefined,
-      status: getCycleStatus(!!payment, dueDate, now),
-      daysUntilDue: !payment ? differenceInDays(dueDate, now) : undefined,
-      isOverdue: !payment && isBefore(dueDate, now),
-      isUpcoming: !payment && isAfter(dueDate, now) && isBefore(billDate, now),
+      status: getCycleStatus(!!payment, dueDate, today),
+      daysUntilDue: !payment ? differenceInDays(dueDate, today) : undefined,
+      isOverdue: !payment && isBefore(dueDate, today),
+      isUpcoming: !payment && !isBefore(dueDate, today) && !isAfter(billDate, today),
       month: format(billDate, 'MMMM yyyy'),
       shortMonth: format(billDate, 'MMM yyyy'),
     });
@@ -135,7 +136,7 @@ export function getNextUnpaidCycle(card: CreditCard): BillingCycle | null {
   const activeUnpaid = cycles.filter(c => !c.isPaid && !isAfter(c.billDate, today));
 
   // First try to find upcoming unpaid cycle
-  const upcoming = activeUnpaid.find(c => isAfter(c.dueDate, today));
+  const upcoming = activeUnpaid.find(c => !isBefore(c.dueDate, today));
   if (upcoming) return upcoming;
 
   // Then find the oldest overdue
@@ -171,7 +172,7 @@ export function getOverdueCycles(card: CreditCard): BillingCycle[] {
 export function getUpcomingCycles(card: CreditCard): BillingCycle[] {
   const today = startOfDay(new Date());
   return getBillingCycles(card)
-    .filter(c => !c.isPaid && isAfter(c.dueDate, today) && !isAfter(c.billDate, today))
+    .filter(c => !c.isPaid && !isBefore(c.dueDate, today) && !isAfter(c.billDate, today))
     .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
 }
 
