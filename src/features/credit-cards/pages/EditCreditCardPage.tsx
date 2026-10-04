@@ -93,7 +93,7 @@ export default function EditCreditCardPage() {
           <label className="text-xs text-muted-foreground mb-1.5 block">
             Card Name
           </label>
-          <input
+          <input enterKeyHint="done"
             value={name}
             onChange={e => setName(e.target.value)}
             className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -105,7 +105,7 @@ export default function EditCreditCardPage() {
           <label className="text-xs text-muted-foreground mb-1.5 block">
             Last 4 Digits (Optional)
           </label>
-          <input
+          <input enterKeyHint="done"
             value={lastFour}
             onChange={e =>
               setLastFour(e.target.value.replace(/\D/g, '').slice(0, 4))
@@ -133,7 +133,7 @@ export default function EditCreditCardPage() {
           <label className="text-xs text-muted-foreground mb-1.5 block">
             Bill Generation Date
           </label>
-          <input
+          <input enterKeyHint="done"
             type="number"
             min="1"
             max="31"
@@ -148,7 +148,7 @@ export default function EditCreditCardPage() {
           <label className="text-xs text-muted-foreground mb-1.5 block">
             Payment Due Date
           </label>
-          <input
+          <input enterKeyHint="done"
             type="number"
             min="1"
             max="31"

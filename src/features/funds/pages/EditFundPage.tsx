@@ -102,7 +102,7 @@ export default function EditFundPage() {
       <div className="page-content space-y-5">
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Fund Name</label>
-          <input
+          <input enterKeyHint="done"
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Weekly Savings"
@@ -152,7 +152,7 @@ export default function EditFundPage() {
         ) : (
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">Day of Month</label>
-            <input
+            <input enterKeyHint="done"
               type="number"
               min="1"
               max="31"

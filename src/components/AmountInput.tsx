@@ -10,7 +10,8 @@ interface AmountInputProps
 /**
  * Rupee amount field: text input with a decimal keypad on mobile, so there
  * are no spinner arrows and the mouse wheel can't change the value. Only
- * digits and up to 2 decimal places are accepted.
+ * digits and up to 2 decimal places are accepted. The keyboard shows a ✓
+ * (done) key instead of Next.
  */
 export function AmountInput({ value, onChange, className, ...props }: AmountInputProps) {
     return (
@@ -21,6 +22,7 @@ export function AmountInput({ value, onChange, className, ...props }: AmountInpu
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
+                enterKeyHint="done"
                 value={value}
                 onChange={(e) => {
                     const next = e.target.value.replace(/,/g, '');

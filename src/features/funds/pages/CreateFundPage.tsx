@@ -49,7 +49,7 @@ export default function CreateFundPage() {
       <div className="page-content space-y-5">
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Fund Name</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Weekly Savings"
+          <input enterKeyHint="done" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Weekly Savings"
             className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
 
@@ -87,7 +87,7 @@ export default function CreateFundPage() {
         ) : (
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">Day of Month</label>
-            <input type="number" min="1" max="31" value={dayOfMonth} onChange={e => setDayOfMonth(e.target.value)}
+            <input enterKeyHint="done" type="number" min="1" max="31" value={dayOfMonth} onChange={e => setDayOfMonth(e.target.value)}
               className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
         )}

@@ -92,7 +92,7 @@ export default function UnlockPage() {
                                 $ ENTER ACCESS KEY
                             </label>
                             <div className="relative">
-                                <input
+                                <input enterKeyHint="done"
                                     type={showPassword ? "text" : "password"}
                                     value={key}
                                     onChange={(e) => {

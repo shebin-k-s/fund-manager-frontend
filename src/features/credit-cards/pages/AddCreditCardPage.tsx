@@ -64,7 +64,7 @@ export default function AddCreditCardPage() {
           <label className="text-xs text-muted-foreground mb-1.5 block">
             Card Name
           </label>
-          <input
+          <input enterKeyHint="done"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. HDFC Regalia"
@@ -77,7 +77,7 @@ export default function AddCreditCardPage() {
           <label className="text-xs text-muted-foreground mb-1.5 block">
             Last 4 Digits (Optional)
           </label>
-          <input
+          <input enterKeyHint="done"
             value={lastFour}
             onChange={(e) => {
               const value = e.target.value.replace(/\D/g, '');
@@ -120,7 +120,7 @@ export default function AddCreditCardPage() {
           <p className="text-[11px] text-muted-foreground mb-1">
             Day of month when your bill is generated
           </p>
-          <input
+          <input enterKeyHint="done"
             type="number"
             min="1"
             max="31"
@@ -138,7 +138,7 @@ export default function AddCreditCardPage() {
           <p className="text-[11px] text-muted-foreground mb-1">
             Day of month when payment is due (can be next month)
           </p>
-          <input
+          <input enterKeyHint="done"
             type="number"
             min="1"
             max="31"
