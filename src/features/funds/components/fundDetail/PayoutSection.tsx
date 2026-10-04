@@ -173,7 +173,7 @@ export function PayoutSection({ fund, totalPaid }: PayoutSectionProps) {
                 </span>
             </div>
 
-            <div className="flex gap-5 mt-5 pt-4 border-t border-white/5">
+            <div className="flex justify-end gap-5 mt-5 pt-4 border-t border-white/5">
                 <button
                     onClick={startEditing}
                     disabled={isPending}
