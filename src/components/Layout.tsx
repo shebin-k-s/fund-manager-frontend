@@ -25,6 +25,9 @@ function loadScrollPositions(): Record<string, number> {
   }
 }
 
+// Add/edit forms: horizontal swipes shouldn't switch tabs mid-form
+const NO_SWIPE_ROUTE = /^\/(funds|cards)\/(new|[^/]+\/edit)$/;
+
 const SWIPE_THRESHOLD = 30;  // px — responsive on mobile
 const SWIPE_RATIO = 1.0;    // deltaX just needs to be > deltaY
 const WHEEL_THRESHOLD = 40; // deltaX pixels for trackpad horizontal swipe
@@ -35,6 +38,8 @@ function LayoutInner() {
   const navigationType = useNavigationType();
   const navigate = useNavigate();
   const { isGlobalSwipeEnabled } = useSwipeGesture();
+  const swipeAllowedRef = useRef(true);
+  swipeAllowedRef.current = !NO_SWIPE_ROUTE.test(pathname);
 
   // ─── Scroll restoration ───
   // Remember the scroll position of each history entry. Back/forward and a
@@ -152,7 +157,7 @@ function LayoutInner() {
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Capture enabled state NOW — inner components have already called
     // disableGlobalSwipe() in their onTouchStart (React bubbles inner→outer).
-    gestureAllowed.current = isGlobalSwipeEnabled();
+    gestureAllowed.current = swipeAllowedRef.current && isGlobalSwipeEnabled();
     startX.current = e.touches[0].clientX;
     startY.current = e.touches[0].clientY;
     lastX.current = e.touches[0].clientX;
@@ -214,7 +219,7 @@ function LayoutInner() {
       wheelTimeout.current = setTimeout(() => { wheelCooldown.current = false; }, 250);
       return;
     }
-    if (!isGlobalSwipeEnabled()) return;
+    if (!swipeAllowedRef.current || !isGlobalSwipeEnabled()) return;
 
     // Only trigger on clearly horizontal trackpad swipes
     if (Math.abs(e.deltaX) > WHEEL_THRESHOLD && Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.5) {
