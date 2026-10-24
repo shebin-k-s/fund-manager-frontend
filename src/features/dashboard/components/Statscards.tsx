@@ -1,4 +1,5 @@
-import { Wallet, CreditCard as CCIcon, Landmark } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Wallet, CreditCard as CCIcon, Landmark, PiggyBank } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatsCardsProps {
@@ -10,13 +11,17 @@ interface StatsCardsProps {
         totalPaid: number;
         count: number;
     };
+    pfStats?: {
+        total: number;
+        months: number;
+    };
     isLoading?: {
         funds: boolean;
         cards: boolean;
     };
 }
 
-export function StatsCards({ fundsStats, cardsStats, isLoading }: StatsCardsProps) {
+export function StatsCards({ fundsStats, cardsStats, pfStats, isLoading }: StatsCardsProps) {
     return (
         <div className="grid grid-cols-2 gap-3">
             <StatCard
@@ -35,6 +40,17 @@ export function StatsCards({ fundsStats, cardsStats, isLoading }: StatsCardsProp
                 color="forest"
                 isLoading={isLoading?.cards}
             />
+            {pfStats && (
+                <StatCard
+                    title="Provident Fund"
+                    value={pfStats.total}
+                    subtitle={`Total across ${pfStats.months} month${pfStats.months !== 1 ? 's' : ''}`}
+                    icon={PiggyBank}
+                    color="amber"
+                    to="/pf"
+                    className="col-span-2"
+                />
+            )}
         </div>
     );
 }
@@ -44,11 +60,13 @@ interface StatCardProps {
     value: number;
     subtitle: string;
     icon: React.ElementType;
-    color: 'navy' | 'forest';
+    color: 'navy' | 'forest' | 'amber';
     isLoading?: boolean;
+    to?: string;
+    className?: string;
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, color, isLoading }: StatCardProps) {
+function StatCard({ title, value, subtitle, icon: Icon, color, isLoading, to, className }: StatCardProps) {
     const colorClasses = {
         navy: {
             bg: 'bg-blue-900/40 border-blue-800/50',
@@ -57,13 +75,17 @@ function StatCard({ title, value, subtitle, icon: Icon, color, isLoading }: Stat
         forest: {
             bg: 'bg-emerald-900/40 border-emerald-800/50',
             text: 'text-emerald-200/90',
+        },
+        amber: {
+            bg: 'bg-amber-900/40 border-amber-800/50',
+            text: 'text-amber-200/90',
         }
     };
 
     const classes = colorClasses[color] || { bg: 'bg-white/5 border-white/10', text: 'text-white/80' };
 
-    return (
-        <div className="glass-card glass-card-hover p-4 group relative overflow-hidden flex flex-col justify-between">
+    const card = (
+        <div className={cn("glass-card glass-card-hover p-4 group relative overflow-hidden flex flex-col justify-between", !to && className)}>
             <div className="relative z-10 flex flex-col gap-2">
                 <div className={cn("w-11 h-11 rounded-xl border flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300 shadow-sm relative overflow-hidden", classes.bg)}>
                     <Icon className={cn("w-5 h-5 z-10", classes.text)} />
@@ -85,4 +107,6 @@ function StatCard({ title, value, subtitle, icon: Icon, color, isLoading }: Stat
             </div>
         </div>
     );
+
+    return to ? <Link to={to} className={cn('block', className)}>{card}</Link> : card;
 }

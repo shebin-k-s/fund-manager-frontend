@@ -19,6 +19,7 @@ import CreditCardDetailPage from "@/features/credit-cards/pages/CreditCardDetail
 import CalendarPage from "@/features/calendar/pages/CalendarPage";
 import StatementsPage from "@/features/statements/pages/StatementsPage";
 import BackupPage from "@/features/backup/pages/BackupPage";
+import PfPage from "@/features/pf/pages/PfPage";
 import NotFound from "./pages/NotFound";
 
 import UnlockPage from "./features/unlock/UnlockPage";
@@ -90,6 +91,7 @@ const App = () => (
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="statements" element={<StatementsPage />} />
             <Route path="backup" element={<BackupPage />} />
+            <Route path="pf" element={<PfPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

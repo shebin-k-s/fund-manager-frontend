@@ -13,6 +13,7 @@ import { StatsCards } from '../components/Statscards';
 import { UpcomingDues } from '../components/UpcomingDues';
 import type { CreditCard, BillingCycle } from '@/features/credit-cards/types';
 import { Fund } from '@/features/funds/types';
+import { usePfSummary } from '@/features/pf/hooks/usePf';
 import { DashboardErrorState } from '../components/DashboardErrorState';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEffect } from 'react';
@@ -30,6 +31,8 @@ export default function DashboardPage() {
     isError: fundsIsError,
     refetch: refetchFunds
   } = fundsQuery;
+
+  const { data: pfSummary } = usePfSummary();
 
   const cardsQuery = useCardsQuery();
   const {
@@ -228,6 +231,10 @@ export default function DashboardPage() {
           cardsStats={{
             totalPaid: totalCardPaid,
             count: safeCards.length
+          }}
+          pfStats={{
+            total: pfSummary?.total ?? 0,
+            months: pfSummary?.months ?? 0
           }}
         />
 

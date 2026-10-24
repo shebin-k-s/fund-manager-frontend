@@ -7,6 +7,7 @@ import EmptyState from '@/components/EmptyState';
 import { getMissedCount } from '../utils/fundDateUtils';
 import { cn } from '@/lib/utils';
 import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { PfSummaryCard } from '@/features/pf/components/PfSummaryCard';
 import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
 
 export default function FundsPage() {
@@ -128,6 +129,7 @@ export default function FundsPage() {
 
       {/* Main Content */}
       <div className="px-4 pt-4 pb-4 max-w-lg mx-auto">
+        <PfSummaryCard className="mb-3" />
         {isLoading ? (
           <FundListSkeleton />
         ) : funds.length === 0 ? (
