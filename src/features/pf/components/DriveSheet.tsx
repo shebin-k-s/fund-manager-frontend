@@ -3,9 +3,9 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle2, ChevronDown, Cloud, ExternalLink, Info, Loader2, RefreshCw } from 'lucide-react';
 import type { PfStatus } from '../api/pfApi';
+import { BottomSheet } from './BottomSheet';
 import { useConnectPfDrive, useDisconnectPfDrive, useSetPfFolder, type usePfSync } from '../hooks/usePf';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useBackToClose } from '@/hooks/useBackToClose';
 import { cn } from '@/lib/utils';
 
 const PRIMARY_BUTTON =
@@ -49,7 +49,6 @@ function FolderLayoutHint({ title }: { title?: string }) {
 // Google Drive settings, opened from the gear in the page header. The everyday action, syncing, lives in the
 // header; this is for connecting, choosing the folder and disconnecting.
 export function DriveSheet({ status, sync, onClose }: { status: PfStatus | undefined; sync: ReturnType<typeof usePfSync>; onClose: () => void }) {
-  useBackToClose(true, onClose);
   const connect = useConnectPfDrive();
   const disconnect = useDisconnectPfDrive();
   const setFolder = useSetPfFolder();
@@ -65,11 +64,7 @@ export function DriveSheet({ status, sync, onClose }: { status: PfStatus | undef
         : status.accountEmail ?? 'Connected';
 
   return (
-    <Dialog.Root open onOpenChange={(next) => !next && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-fade-in" />
-        <Dialog.Content className="fixed inset-x-0 bottom-0 z-[60] w-full max-w-md mx-auto focus:outline-none">
-          <div className="bg-card border border-border shadow-2xl rounded-t-3xl p-6 space-y-5 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+    <BottomSheet onClose={onClose}>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
                 <Cloud className="w-4 h-4 text-primary" />
@@ -158,9 +153,6 @@ export function DriveSheet({ status, sync, onClose }: { status: PfStatus | undef
             </>
           )}
         </div>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    </BottomSheet>
   );
 }

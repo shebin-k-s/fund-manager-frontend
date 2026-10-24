@@ -140,7 +140,7 @@ export default function PfCompanyPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{fullMonthName(it.record.month)}</p>
                       {it.flag ? (
-                        <p className="text-[11px] text-amber-300 mt-0.5">{it.flag.pct > 0 ? 'Up' : 'Down'} {Math.abs(it.flag.pct)}% from {monthLabel(it.flag.previousMonth)}</p>
+                        <p className="text-[11px] text-amber-300 mt-0.5">Was {inr(it.flag.previous)} in {monthLabel(it.flag.previousMonth)}</p>
                       ) : (
                         it.record.edited && <p className="text-[11px] text-muted-foreground mt-0.5">Edited by hand</p>
                       )}
