@@ -34,7 +34,9 @@ function DriveSection({ status, connecting }: { status: UseQueryResult<DriveStat
   const disconnect = useDisconnectDrive();
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const d = status.data;
-  const busy = connect.isPending || run.isPending || setAuto.isPending || disconnect.isPending;
+  // Each control is disabled only by what could clash with it: backing up and the automatic switch are
+  // independent of each other (the server keeps them apart), so neither blocks the other.
+  const switching = connect.isPending || disconnect.isPending; // moving the connection itself blocks everything
 
   return (
     <section className="glass-card p-4 space-y-3">
@@ -56,7 +58,7 @@ function DriveSection({ status, connecting }: { status: UseQueryResult<DriveStat
           <p className="text-xs text-muted-foreground">
             Backups go to a <span className="font-semibold text-foreground">Fund Manager Backups</span> folder in your Drive.
           </p>
-          <button onClick={() => connect.mutate()} disabled={busy} className={PRIMARY_BUTTON}>
+          <button onClick={() => connect.mutate()} disabled={switching} className={PRIMARY_BUTTON}>
             {connect.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Opening Google…</> : <><Cloud className="w-4 h-4" /> Connect Google Drive</>}
           </button>
         </>
@@ -84,7 +86,7 @@ function DriveSection({ status, connecting }: { status: UseQueryResult<DriveStat
             </div>
           )}
 
-          <button onClick={() => run.mutate()} disabled={busy} className={PRIMARY_BUTTON}>
+          <button onClick={() => run.mutate()} disabled={run.isPending || switching} className={PRIMARY_BUTTON}>
             {run.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Backing up…</> : <><Cloud className="w-4 h-4" /> Back up to Drive now</>}
           </button>
 
@@ -98,12 +100,12 @@ function DriveSection({ status, connecting }: { status: UseQueryResult<DriveStat
             <Switch
               checked={d.autoEnabled}
               onCheckedChange={(on) => setAuto.mutate(on)}
-              disabled={busy || (!d.autoEnabled && !d.schedulerKeySet)}
+              disabled={setAuto.isPending || switching || (!d.autoEnabled && !d.schedulerKeySet)}
               aria-label="Back up automatically every day"
             />
           </div>
 
-          <button type="button" onClick={() => setConfirmDisconnect(true)} disabled={busy} className="text-xs font-semibold text-destructive disabled:opacity-50">
+          <button type="button" onClick={() => setConfirmDisconnect(true)} disabled={run.isPending || setAuto.isPending || switching} className="text-xs font-semibold text-destructive disabled:opacity-50">
             Disconnect
           </button>
           <ConfirmDialog
