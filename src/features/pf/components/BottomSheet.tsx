@@ -2,16 +2,17 @@ import { useEffect, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useBackToClose } from '@/hooks/useBackToClose';
 
-// By default Chrome on Android leaves the page alone when the keyboard opens and pans the screen over it, so a
-// bottom sheet has to be repositioned from script, a frame behind the browser, and visibly jumps. Asking Chrome to
-// resize the page instead keeps a plain `bottom: 0` sheet sitting on top of the keyboard with nothing to track.
-// Only while a sheet is open: the rest of the app keeps its normal keyboard behaviour.
-function useResizeWithKeyboard() {
+// Android Chrome briefly hides and re-shows the keyboard when focus moves between fields. A sheet that sits on top of
+// the keyboard follows every one of those flickers, and one that is repositioned from script lags the browser's own
+// screen pan. So the sheet does neither: while it is open the keyboard is told to overlay the page (nothing is resized
+// or panned), and the sheet has a fixed place, so it cannot move. Only while a sheet is open: the rest of the app keeps
+// its normal keyboard behaviour.
+function useKeyboardOverlays() {
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
     if (!meta || meta.content.includes('interactive-widget')) return;
     const original = meta.content;
-    meta.content = `${original}, interactive-widget=resizes-content`;
+    meta.content = `${original}, interactive-widget=overlays-content`;
     return () => {
       meta.content = original;
     };
@@ -24,10 +25,11 @@ interface BottomSheetProps {
   children: ReactNode; // should include a Dialog.Title
 }
 
-// A sheet from the bottom edge, as wide as the app column. Mount it to open it.
+// A sheet rising from the bottom edge up to just under the top, as wide as the app column. Put what the user must
+// always reach (Save, Cancel, Done) at its top: the keyboard covers its lower part while typing. Mount it to open it.
 export function BottomSheet({ onClose, locked = false, children }: BottomSheetProps) {
   useBackToClose(true, onClose);
-  useResizeWithKeyboard();
+  useKeyboardOverlays();
 
   return (
     <Dialog.Root open onOpenChange={(next) => !next && !locked && onClose()}>
@@ -36,11 +38,10 @@ export function BottomSheet({ onClose, locked = false, children }: BottomSheetPr
         <Dialog.Content
           // Opening a sheet must not raise the keyboard: nothing is focused until a field is tapped.
           onOpenAutoFocus={(e) => e.preventDefault()}
-          className="fixed inset-x-0 bottom-0 z-[60] w-full max-w-md mx-auto focus:outline-none"
+          className="fixed inset-x-0 top-12 bottom-0 z-[60] w-full max-w-md mx-auto focus:outline-none"
         >
-          {/* No `transition`: with the browser's default (all properties) the height would ease over 0.2s while the
-              keyboard moves the sheet instantly, which reads as a wobble. */}
-          <div className="bg-card border border-border shadow-2xl rounded-t-3xl p-6 space-y-5 max-h-[92dvh] overflow-y-auto transition-none animate-in slide-in-from-bottom duration-200">
+          {/* No `transition`: the browser default (all properties) would ease any size change over 0.2s. */}
+          <div className="h-full bg-card border border-border shadow-2xl rounded-t-3xl p-6 space-y-5 overflow-y-auto transition-none animate-in slide-in-from-bottom duration-200">
             {children}
           </div>
         </Dialog.Content>

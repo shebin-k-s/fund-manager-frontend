@@ -74,6 +74,7 @@ export function DriveSheet({ status, sync, onClose }: { status: PfStatus | undef
                 <Dialog.Description className="text-[11px] text-muted-foreground truncate">{summary}</Dialog.Description>
               </div>
               {status?.connected && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-success/15 text-success shrink-0">Connected</span>}
+              <button type="button" onClick={onClose} className="text-sm font-semibold text-primary shrink-0">Done</button>
             </div>
 
         <div className="space-y-3">
