@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Wallet, CreditCard as CCIcon, Landmark, PiggyBank } from 'lucide-react';
+import { inr } from '@/features/pf/utils/pfFormat';
 import { cn } from '@/lib/utils';
 
 interface StatsCardsProps {
@@ -14,6 +15,7 @@ interface StatsCardsProps {
     pfStats?: {
         total: number;
         months: number;
+        alerts?: number;
     };
     isLoading?: {
         funds: boolean;
@@ -44,7 +46,9 @@ export function StatsCards({ fundsStats, cardsStats, pfStats, isLoading }: Stats
                 <StatCard
                     title="Provident Fund"
                     value={pfStats.total}
-                    subtitle={`Total across ${pfStats.months} month${pfStats.months !== 1 ? 's' : ''}`}
+                    valueText={inr(pfStats.total)}
+                    subtitle={pfStats.alerts ? `${pfStats.alerts} to check` : `Total across ${pfStats.months} month${pfStats.months !== 1 ? 's' : ''}`}
+                    alertSubtitle={!!pfStats.alerts}
                     icon={PiggyBank}
                     color="amber"
                     to="/pf"
@@ -58,6 +62,8 @@ export function StatsCards({ fundsStats, cardsStats, pfStats, isLoading }: Stats
 interface StatCardProps {
     title: string;
     value: number;
+    valueText?: string; // overrides how the number is written
+    alertSubtitle?: boolean; // the subtitle is something to act on, so it is drawn in amber
     subtitle: string;
     icon: React.ElementType;
     color: 'navy' | 'forest' | 'amber';
@@ -66,7 +72,7 @@ interface StatCardProps {
     className?: string;
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, color, isLoading, to, className }: StatCardProps) {
+function StatCard({ title, value, valueText, alertSubtitle, subtitle, icon: Icon, color, isLoading, to, className }: StatCardProps) {
     const colorClasses = {
         navy: {
             bg: 'bg-blue-900/40 border-blue-800/50',
@@ -99,9 +105,9 @@ function StatCard({ title, value, subtitle, icon: Icon, color, isLoading, to, cl
                 ) : (
                     <>
                         <p className="text-[20px] font-extrabold text-white/95 mt-1 tracking-tight drop-shadow-sm">
-                            ₹{value.toLocaleString('en-IN')}
+                            {valueText ?? `₹${value.toLocaleString('en-IN')}`}
                         </p>
-                        <p className="text-[11px] font-medium text-muted-foreground/80 mt-0.5">{subtitle}</p>
+                        <p className={cn("text-[11px] font-medium text-muted-foreground/80 mt-0.5", alertSubtitle && "text-amber-400")}>{subtitle}</p>
                     </>
                 )}
             </div>

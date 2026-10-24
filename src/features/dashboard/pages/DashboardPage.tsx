@@ -234,7 +234,8 @@ export default function DashboardPage() {
           }}
           pfStats={{
             total: pfSummary?.total ?? 0,
-            months: pfSummary?.months ?? 0
+            months: pfSummary?.months ?? 0,
+            alerts: pfSummary?.alerts?.length ?? 0
           }}
         />
 

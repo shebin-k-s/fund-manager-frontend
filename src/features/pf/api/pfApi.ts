@@ -22,14 +22,18 @@ export interface PfRecord {
   edited: boolean;
 }
 
+export type PfAlert =
+  | { type: 'missing'; company: string; from: string; to: string; count: number; trailing: boolean }
+  | { type: 'change'; company: string; month: string; previousMonth: string; previous: number; current: number; pct: number };
+
 export interface PfSummary {
   months: number;
   employeeTotal: number;
   employerTotal: number;
   total: number;
   latestMonth: string | null;
+  alerts: PfAlert[];
   byCompany: { company: string; employee: number; employer: number; total: number; months: number; from: string; to: string }[];
-  byFinancialYear: { label: string; employee: number; employer: number; months: number }[];
 }
 
 export interface PfRecordInput {
@@ -88,6 +92,11 @@ export const pfApi = {
   async saveRecord(id: string | null, input: PfRecordInput): Promise<PfRecord> {
     const { data } = id ? await apiClient.put<PfRecord>(`/pf/records/${id}`, input) : await apiClient.post<PfRecord>('/pf/records', input);
     return data;
+  },
+
+  // Accepts a flagged amount, so it stops raising a "big change" alert.
+  async reviewRecord(id: string): Promise<void> {
+    await apiClient.post(`/pf/records/${id}/review`);
   },
 
   async deleteRecord(id: string): Promise<void> {

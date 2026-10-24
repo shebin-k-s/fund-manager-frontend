@@ -20,6 +20,7 @@ import CalendarPage from "@/features/calendar/pages/CalendarPage";
 import StatementsPage from "@/features/statements/pages/StatementsPage";
 import BackupPage from "@/features/backup/pages/BackupPage";
 import PfPage from "@/features/pf/pages/PfPage";
+import PfCompanyPage from "@/features/pf/pages/PfCompanyPage";
 import NotFound from "./pages/NotFound";
 
 import UnlockPage from "./features/unlock/UnlockPage";
@@ -92,6 +93,7 @@ const App = () => (
             <Route path="statements" element={<StatementsPage />} />
             <Route path="backup" element={<BackupPage />} />
             <Route path="pf" element={<PfPage />} />
+            <Route path="pf/company" element={<PfCompanyPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

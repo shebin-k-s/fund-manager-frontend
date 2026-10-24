@@ -87,3 +87,15 @@ export function useDeletePfRecord() {
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
+
+export function useReviewPfRecord() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: pfApi.reviewRecord,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: PF_KEY });
+      toast.success('Marked as reviewed');
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
