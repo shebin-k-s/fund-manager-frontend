@@ -69,8 +69,9 @@ export const pfApi = {
     return data;
   },
 
-  async sync(): Promise<PfSyncResult> {
-    const { data } = await apiClient.post<PfSyncResult>('/pf/sync', {}, { timeout: 180_000 });
+  // full: read the files already read before again too (hand-edited months are still left alone).
+  async sync(full = false): Promise<PfSyncResult> {
+    const { data } = await apiClient.post<PfSyncResult>(`/pf/sync${full ? '?full=true' : ''}`, {}, { timeout: 180_000 });
     return data;
   },
 

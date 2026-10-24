@@ -91,8 +91,12 @@ function DriveSection({ status }: { status: PfStatus | undefined }) {
             </div>
           )}
 
-          <button onClick={() => sync.mutate()} disabled={!status.folderId || sync.isPending} className={PRIMARY_BUTTON}>
+          <button onClick={() => sync.mutate(false)} disabled={!status.folderId || sync.isPending} className={PRIMARY_BUTTON}>
             {sync.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Reading payslips…</> : <><RefreshCw className="w-4 h-4" /> Sync payslips</>}
+          </button>
+
+          <button type="button" onClick={() => sync.mutate(true)} disabled={!status.folderId || sync.isPending} className="block text-xs font-semibold text-primary disabled:opacity-50">
+            Re-read all payslips
           </button>
 
           <button type="button" onClick={() => setConfirmDisconnect(true)} disabled={sync.isPending} className="text-xs font-semibold text-destructive disabled:opacity-50">

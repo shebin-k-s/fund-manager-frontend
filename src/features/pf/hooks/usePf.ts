@@ -55,7 +55,7 @@ export function useSetPfFolder() {
 export function usePfSync() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: pfApi.sync,
+    mutationFn: (full: boolean) => pfApi.sync(full),
     onSuccess: (r) => {
       toast.success(`Read ${r.found} payslip${r.found === 1 ? '' : 's'}: ${r.added} added, ${r.updated} updated`);
     },
