@@ -4,6 +4,14 @@ import { useBackToClose } from '@/hooks/useBackToClose';
 
 const TOP_GAP = 48; // px kept free above the sheet when it is raised for typing
 const HIDE_DELAY = 350; // ms: Android blinks the keyboard when focus moves between fields; shorter than this is not "done typing"
+const MIN_KEYBOARD = 120; // px: after the keyboard is dismissed Chrome still reports a ~47px strip; anything this small means "gone"
+const SETTLE = 120; // ms a reported keyboard height must hold before the sheet follows it (a stale value shows for ~30ms on a type change)
+
+// Keyboard heights in px by kind (number pad / text keyboard), so the sheet can rise at once when a field is tapped
+// instead of waiting ~0.3s for the browser to report the real height. The defaults are one phone's; every report
+// replaces them for the rest of the session.
+const keyboardHeight: Record<'number' | 'text', number> = { number: 286, text: 315 };
+const kindOf = (el: Element | null): 'number' | 'text' => (el instanceof HTMLElement && (el.inputMode === 'decimal' || el.inputMode === 'numeric') ? 'number' : 'text');
 
 // The part of the Visual Keyboard API this uses (Chrome / Edge on Android). Elsewhere it is simply absent.
 interface VirtualKeyboardLike extends EventTarget {
@@ -48,31 +56,53 @@ interface BottomSheetProps {
   children: ReactNode; // should include a Dialog.Title
 }
 
-// A sheet that is exactly as tall as its content and rests on the bottom edge. Tapping a text field raises it once
-// to a fixed place near the top (the keyboard covers the empty space below it) and it stays there while focus moves
-// between fields, so it cannot flicker with the keyboard; it settles back when typing is over. Put what the user
+// A sheet that is exactly as tall as its content and rests on the bottom edge. Tapping a text field raises it so its
+// bottom edge meets the top of the keyboard; it moves again only when the keyboard really changes (number pad <-> text
+// keyboard), never with the keyboard's momentary blinks between fields, and settles back when typing is over. Put what the user
 // must always reach (Save, Cancel, Done) at the top of the content. Mount it to open it.
 export function BottomSheet({ onClose, locked = false, children }: BottomSheetProps) {
   useBackToClose(true, onClose);
   const sheet = useRef<HTMLDivElement>(null);
-  const timer = useRef<number>();
+  const hideTimer = useRef<number>();
+  const settleTimer = useRef<number>();
   const [lift, setLift] = useState(0); // px the sheet is raised, 0 at rest
+  const hasKeyboardApi = typeof navigator !== 'undefined' && 'virtualKeyboard' in navigator;
 
-  const raise = () => {
-    window.clearTimeout(timer.current);
+  // Where a focused text field should put the sheet: flush on top of the keyboard when its height is known (the
+  // sheet then has no gap above it and none hiding below it), otherwise a fixed spot near the top.
+  const raise = (field: Element | null) => {
+    window.clearTimeout(hideTimer.current);
+    if (hasKeyboardApi) {
+      setLift(keyboardHeight[kindOf(field)]);
+      return;
+    }
     const height = sheet.current?.getBoundingClientRect().height ?? 0;
     setLift(Math.max(0, window.innerHeight - TOP_GAP - height));
   };
   const lower = () => {
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setLift(0), HIDE_DELAY);
+    window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setLift(0), HIDE_DELAY);
   };
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(hideTimer.current);
+      window.clearTimeout(settleTimer.current);
+    },
+    [],
+  );
 
-  useKeyboardOverlays((keyboardHeight) => {
-    // The keyboard was hidden (or brought back) without focus changing: follow it, but only on a settled value.
-    if (keyboardHeight === 0) lower();
-    else if (isTextField(document.activeElement)) raise();
+  useKeyboardOverlays((height) => {
+    // The browser reports the keyboard's real height; follow it once it has held still for a moment.
+    window.clearTimeout(settleTimer.current);
+    settleTimer.current = window.setTimeout(() => {
+      if (height < MIN_KEYBOARD) return lower(); // hidden without focus changing (e.g. the Back key)
+      const field = document.activeElement;
+      keyboardHeight[kindOf(field)] = height;
+      if (isTextField(field)) {
+        window.clearTimeout(hideTimer.current);
+        setLift(height);
+      }
+    }, SETTLE);
   });
 
   return (
@@ -85,12 +115,14 @@ export function BottomSheet({ onClose, locked = false, children }: BottomSheetPr
           style={{ transform: `translateY(${-lift}px)` }}
           className="fixed inset-x-0 bottom-0 z-[60] w-full max-w-md mx-auto focus:outline-none transition-transform duration-200 ease-out"
         >
-          {/* No `transition` here: the browser default (all properties) would ease any size change over 0.2s. */}
+          {/* Only max-height eases, with the same 0.2s as the sheet's slide, so when a taller keyboard shrinks the sheet its
+              top edge stays put. (The browser default, all properties, eased everything and made it wobble.) */}
           <div
             ref={sheet}
-            onFocusCapture={(e) => isTextField(e.target) && raise()}
+            style={{ maxHeight: Math.max(240, window.innerHeight - TOP_GAP - lift) }}
+            onFocusCapture={(e) => isTextField(e.target) && raise(e.target as Element)}
             onBlurCapture={(e) => isTextField(e.target) && lower()}
-            className="bg-card border border-border shadow-2xl rounded-t-3xl p-6 space-y-5 max-h-[calc(100dvh-3rem)] overflow-y-auto transition-none animate-in slide-in-from-bottom duration-200"
+            className="bg-card border border-border shadow-2xl rounded-t-3xl p-6 space-y-5 overflow-y-auto transition-[max-height] ease-out animate-in slide-in-from-bottom duration-200"
           >
             {children}
           </div>

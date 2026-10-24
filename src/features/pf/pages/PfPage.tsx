@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNowStrict } from 'date-fns';
 import { ArrowLeft, Plus, RefreshCw, Settings } from 'lucide-react';
 import { usePfStatus, usePfSummary, usePfRecords, usePfSync } from '../hooks/usePf';
 import { CompanyRow } from '../components/CompanyRow';
@@ -12,6 +12,9 @@ import { PfAlertsCard } from '../components/PfAlertsCard';
 import { RecordSheet } from '../components/RecordSheet';
 import { ShareBar } from '../components/ShareBar';
 import { SyncResultCard } from '../components/SyncResultCard';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { combineFreshness } from '../utils/combineFreshness';
 import { cn } from '@/lib/utils';
 import { colorOf, companyColors, inr } from '../utils/pfFormat';
 
@@ -22,6 +25,7 @@ export default function PfPage() {
   const summary = usePfSummary();
   const records = usePfRecords();
   const sync = usePfSync();
+  const freshness = combineFreshness(useQueryFreshness(status), useQueryFreshness(summary), useQueryFreshness(records));
   const [adding, setAdding] = useState(false);
   const [driveOpen, setDriveOpen] = useState(false);
 
@@ -60,13 +64,13 @@ export default function PfPage() {
     : !st
       ? ''
       : !st.configured || !st.connected
-        ? 'Google Drive not connected'
+        ? 'Drive not connected'
         : !st.folderId
-          ? 'Add your payslip folder to sync'
+          ? 'Add a payslip folder'
           : st.lastStatus === 'error'
-            ? 'Last sync failed — tap sync to retry'
+            ? 'Last sync failed'
             : st.lastSyncAt
-              ? `Synced ${formatDistanceToNow(new Date(st.lastSyncAt), { addSuffix: true })}`
+              ? `Synced ${formatDistanceToNowStrict(new Date(st.lastSyncAt), { addSuffix: true })}`
               : 'Not synced yet';
 
   return (
@@ -77,7 +81,10 @@ export default function PfPage() {
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-bold">Provident Fund</h1>
-          {syncLine && <p className={cn('text-[11px] truncate', st?.lastStatus === 'error' && !sync.isPending ? 'text-destructive' : 'text-muted-foreground')}>{syncLine}</p>}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {!loading && <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />}
+            {syncLine && <p className={cn('text-[11px] truncate', st?.lastStatus === 'error' && !sync.isPending ? 'text-destructive' : 'text-muted-foreground')}>{syncLine}</p>}
+          </div>
         </div>
         {canSync && (
           <button onClick={() => sync.mutate(false)} disabled={sync.isPending} aria-label="Sync payslips" className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-secondary-foreground disabled:opacity-60">

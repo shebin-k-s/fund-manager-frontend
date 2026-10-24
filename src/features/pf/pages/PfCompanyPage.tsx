@@ -5,6 +5,9 @@ import type { PfAlert, PfRecord } from '../api/pfApi';
 import { usePfRecords, usePfSummary, useDeletePfRecord, useReviewPfRecord } from '../hooks/usePf';
 import { RecordSheet } from '../components/RecordSheet';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DataFreshnessIndicator } from '@/components/DataFreshnessIndicator';
+import { useQueryFreshness } from '@/hooks/useQueryFreshness';
+import { combineFreshness } from '../utils/combineFreshness';
 import { companyLabel, fullMonthName, inr, monthLabel, yearOf } from '../utils/pfFormat';
 import { changeNote, missingTitle } from '../utils/pfAlertText';
 
@@ -22,6 +25,7 @@ export default function PfCompanyPage() {
   const summary = usePfSummary();
   const records = usePfRecords();
   const remove = useDeletePfRecord();
+  const freshness = combineFreshness(useQueryFreshness(summary), useQueryFreshness(records));
   const review = useReviewPfRecord();
   const [sheet, setSheet] = useState<{ record: PfRecord | null; month?: string } | null>(null);
   const [deleting, setDeleting] = useState<PfRecord | null>(null);
@@ -91,7 +95,10 @@ export default function PfCompanyPage() {
         </button>
         <div className="flex-1 min-w-0">
           <p className="text-xs text-muted-foreground">Provident Fund</p>
-          <h1 className="text-xl font-bold truncate">{companyLabel(name)}</h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-xl font-bold truncate">{companyLabel(name)}</h1>
+            {!records.isLoading && <DataFreshnessIndicator status={freshness.status} isFetching={freshness.isFetching} />}
+          </div>
         </div>
         <button onClick={() => setSheet({ record: null })} aria-label="Add a month" className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
           <Plus className="w-5 h-5" />
