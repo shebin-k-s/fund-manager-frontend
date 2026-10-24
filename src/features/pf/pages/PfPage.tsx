@@ -15,6 +15,7 @@ const INPUT = 'w-full rounded-xl bg-secondary/60 px-3 py-2.5 text-sm outline-non
 
 const inr = (n: number | string | null) => (n === null ? '—' : `₹${Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`);
 const monthLabel = (ym: string) => format(new Date(`${ym}-01T00:00:00`), 'MMM yyyy');
+const companyLabel = (company: string) => company || 'Other';
 
 function DriveSection({ status }: { status: PfStatus | undefined }) {
   const connect = useConnectPfDrive();
@@ -51,7 +52,8 @@ function DriveSection({ status }: { status: PfStatus | undefined }) {
           </p>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold">Payslip folder link</label>
+            <label className="text-xs font-semibold">Parent folder link</label>
+            <p className="text-[11px] text-muted-foreground">The folder that holds all your companies. Every folder inside it is scanned, and each company is its first folder.</p>
             <div className="flex gap-2">
               <input className={INPUT} placeholder="https://drive.google.com/drive/folders/…" value={folder} onChange={(e) => setFolderText(e.target.value)} />
               <button
@@ -112,8 +114,9 @@ function DriveSection({ status }: { status: PfStatus | undefined }) {
   );
 }
 
-function RecordForm({ record, onClose }: { record: PfRecord | null; onClose: () => void }) {
+function RecordForm({ record, companies, onClose }: { record: PfRecord | null; companies: string[]; onClose: () => void }) {
   const save = useSavePfRecord();
+  const [company, setCompany] = useState(record?.company ?? companies[0] ?? '');
   const [month, setMonth] = useState(record?.month ?? format(new Date(), 'yyyy-MM'));
   const [employeePf, setEmployeePf] = useState(record?.employeePf ?? '');
   const [employerPf, setEmployerPf] = useState(record?.employerPf ?? '');
@@ -125,6 +128,10 @@ function RecordForm({ record, onClose }: { record: PfRecord | null; onClose: () 
     <section className="glass-card p-4 space-y-3">
       <h2 className="text-sm font-bold">{record ? `Edit ${monthLabel(record.month)}` : 'Add a month'}</h2>
       <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs font-semibold col-span-2">Company
+          <input list="pf-companies" className={cn(INPUT, 'mt-1')} placeholder="e.g. Reizend" value={company} onChange={(e) => setCompany(e.target.value)} />
+          <datalist id="pf-companies">{companies.filter(Boolean).map((c) => <option key={c} value={c} />)}</datalist>
+        </label>
         <label className="text-xs font-semibold col-span-2">Month
           <input type="month" className={cn(INPUT, 'mt-1')} value={month} onChange={(e) => setMonth(e.target.value)} />
         </label>
@@ -142,7 +149,7 @@ function RecordForm({ record, onClose }: { record: PfRecord | null; onClose: () 
         <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-secondary">Cancel</button>
         <button
           disabled={!valid || save.isPending}
-          onClick={() => save.mutate({ id: record?.id ?? null, input: { month, employeePf: Number(employeePf), employerPf: num(String(employerPf)), gross: num(String(gross)) } }, { onSuccess: onClose })}
+          onClick={() => save.mutate({ id: record?.id ?? null, input: { company: company.trim(), month, employeePf: Number(employeePf), employerPf: num(String(employerPf)), gross: num(String(gross)) } }, { onSuccess: onClose })}
           className="flex-1 py-3 rounded-xl text-sm font-semibold bg-primary text-primary-foreground disabled:bg-muted disabled:text-muted-foreground"
         >
           {save.isPending ? 'Saving…' : 'Save'}
@@ -177,6 +184,9 @@ export default function PfPage() {
 
   const s = summary.data;
   const list = records.data ?? [];
+  // Company order follows the summary (current employer first); each group keeps the newest month on top.
+  const companies = s ? s.byCompany.map((c) => c.company) : [...new Set(list.map((r) => r.company))];
+  const groups = companies.map((company) => ({ company, items: list.filter((r) => r.company === company) })).filter((g) => g.items.length > 0);
 
   return (
     <div className="animate-fade-in mb-4">
@@ -201,6 +211,20 @@ export default function PfPage() {
             <div className="rounded-xl bg-secondary/60 px-3 py-2"><p className="text-muted-foreground">Your share</p><p className="font-semibold">{s ? inr(s.employeeTotal) : '—'}</p></div>
             <div className="rounded-xl bg-secondary/60 px-3 py-2"><p className="text-muted-foreground">Employer share</p><p className="font-semibold">{s ? inr(s.employerTotal) : '—'}</p></div>
           </div>
+          {s && s.byCompany.length > 0 && (
+            <div className="space-y-1.5 text-xs">
+              <p className="font-semibold">By company</p>
+              {s.byCompany.map((c) => (
+                <div key={c.company} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/60 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{companyLabel(c.company)}</p>
+                    <p className="text-[11px] text-muted-foreground">{monthLabel(c.from)} – {monthLabel(c.to)} · {c.months} mo</p>
+                  </div>
+                  <span className="font-semibold shrink-0">{inr(c.total)}</span>
+                </div>
+              ))}
+            </div>
+          )}
           {s && s.byFinancialYear.length > 0 && (
             <div className="space-y-1 text-xs">
               {s.byFinancialYear.map((y) => (
@@ -216,7 +240,7 @@ export default function PfPage() {
         <DriveSection status={status.data} />
 
         {editing ? (
-          <RecordForm record={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />
+          <RecordForm record={editing === 'new' ? null : editing} companies={companies} onClose={() => setEditing(null)} />
         ) : (
           <section className="space-y-2">
             <div className="flex items-center justify-between">
@@ -226,14 +250,19 @@ export default function PfPage() {
             {list.length === 0 ? (
               <p className="text-xs text-muted-foreground glass-card p-4">{records.isLoading ? 'Loading…' : 'No PF records yet. Connect Drive and sync, or add a month by hand.'}</p>
             ) : (
-              list.map((r) => (
-                <div key={r.id} className="glass-card p-3 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{monthLabel(r.month)}{r.edited && <span className="ml-2 text-[10px] font-medium text-muted-foreground">edited</span>}</p>
-                    <p className="text-xs text-muted-foreground">You {inr(r.employeePf)} · Employer {inr(r.employerPf)}</p>
-                  </div>
-                  <button aria-label="Edit" onClick={() => setEditing(r)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center"><Pencil className="w-3.5 h-3.5" /></button>
-                  <button aria-label="Delete" onClick={() => setDeleting(r)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+              groups.map((g) => (
+                <div key={g.company} className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground pt-1">{companyLabel(g.company)}</p>
+                  {g.items.map((r) => (
+                    <div key={r.id} className="glass-card p-3 flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold">{monthLabel(r.month)}{r.edited && <span className="ml-2 text-[10px] font-medium text-muted-foreground">edited</span>}</p>
+                        <p className="text-xs text-muted-foreground">You {inr(r.employeePf)} · Employer {inr(r.employerPf)}</p>
+                      </div>
+                      <button aria-label="Edit" onClick={() => setEditing(r)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button aria-label="Delete" onClick={() => setDeleting(r)} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  ))}
                 </div>
               ))
             )}
@@ -245,7 +274,7 @@ export default function PfPage() {
         open={!!deleting}
         onCancel={() => setDeleting(null)}
         title="Delete this month?"
-        description={deleting ? `${monthLabel(deleting.month)} is removed from your PF total. A later sync can add it back from the payslip.` : ''}
+        description={deleting ? `${companyLabel(deleting.company)} · ${monthLabel(deleting.month)} is removed from your PF total. A later sync can add it back from the payslip.` : ''}
         confirmLabel="Delete"
         pendingLabel="Deleting..."
         isPending={remove.isPending}

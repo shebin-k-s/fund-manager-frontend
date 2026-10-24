@@ -13,6 +13,7 @@ export interface PfStatus {
 
 export interface PfRecord {
   id: string;
+  company: string; // '' when unknown
   month: string; // YYYY-MM
   employeePf: string;
   employerPf: string | null;
@@ -27,10 +28,12 @@ export interface PfSummary {
   employerTotal: number;
   total: number;
   latestMonth: string | null;
+  byCompany: { company: string; employee: number; employer: number; total: number; months: number; from: string; to: string }[];
   byFinancialYear: { label: string; employee: number; employer: number; months: number }[];
 }
 
 export interface PfRecordInput {
+  company: string;
   month: string;
   employeePf: number;
   employerPf: number | null;
