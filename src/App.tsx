@@ -18,6 +18,7 @@ import EditCreditCardPage from "@/features/credit-cards/pages/EditCreditCardPage
 import CreditCardDetailPage from "@/features/credit-cards/pages/CreditCardDetailPage";
 import CalendarPage from "@/features/calendar/pages/CalendarPage";
 import StatementsPage from "@/features/statements/pages/StatementsPage";
+import BackupPage from "@/features/backup/pages/BackupPage";
 import NotFound from "./pages/NotFound";
 
 import UnlockPage from "./features/unlock/UnlockPage";
@@ -88,6 +89,7 @@ const App = () => (
             <Route path="cards/:id/edit" element={<EditCreditCardPage />} />
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="statements" element={<StatementsPage />} />
+            <Route path="backup" element={<BackupPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

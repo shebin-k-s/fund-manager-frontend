@@ -6,11 +6,13 @@ import {
     Bell,
     BellOff,
     BellRing,
-    FileText
+    FileText,
+    DatabaseBackup
 } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useNotifications } from '@/hooks/useNotifications';
 import { exportStatementToPdf } from '@/features/statements/utils/exportToPdf';
@@ -24,6 +26,7 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ onLogout, freshness }: DashboardHeaderProps) {
+    const navigate = useNavigate();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     useEffect(() => {
@@ -111,6 +114,16 @@ export function DashboardHeader({ onLogout, freshness }: DashboardHeaderProps) {
                             ) : (
                                 <Bell className="w-4 h-4" />
                             )}
+                        </button>
+
+                        {/* Backup & restore */}
+                        <button
+                            onClick={() => navigate('/backup')}
+                            aria-label="Backup and restore"
+                            title="Backup & restore"
+                            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-white/[0.08] transition-all active:scale-95"
+                        >
+                            <DatabaseBackup className="w-4 h-4" />
                         </button>
 
                         {/* Logout */}
